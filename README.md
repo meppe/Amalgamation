@@ -1,18 +1,17 @@
-************************************************************************
-*** COINVENT Amalgamation Module 									
-Authors:
+COINVENT Amalgamation Module 									
+=================================
+
+### Authors:
 - Manfred Eppe (meppe@iiia.csic.es)						 
 - Roberto Confalonieri (confalonieri@iiia.csic.es)       
 - Ewen MacLean (ewenmaclean@gmail.com)        			 
-************************************************************************
 
-** OVERVIEW **
 
+### OVERVIEW
 This is the amalgamation system which is the core of the blending process. The current state (22.04.15) should run on Ubuntu linux machines with some music examples and the example of blending the theory of naturals with the theory of lists to obtain some novel lemma for the theory of lists. 
 It currently works with CASL only, and relies on HETS (via commandline-call) to compute colimits. In future versions it will rely also on language modules to have language-independence, and HDTP to improve generalization search. 
 
-** MODULE FILE STRUCTURE **
-
+### MODULE FILE STRUCTURE
 - Python code:
 	- run-blending.py 
 		This is the file to be called to start the blending. It invokes the ASP solver clingo4, which in turn invokes Python for parsing and other stuff and HETS for computing colimits. 
@@ -34,13 +33,10 @@ It currently works with CASL only, and relies on HETS (via commandline-call) to 
 - Clingo binary
 	- clingo4 is the 64bit binary of clingo v.4.4.0. I complied it with python and lua support. 
 	- gringo.so are the python libraries for clingo
-	If your system complains that python or lua are not found, do (in ubuntu):
-	
-	sudo apt-get install python2.7 python2.7-dev lua5.1 lua5.1-policy-dev
+	If your system complains that python or lua are not found, do (in ubuntu): "sudo apt-get install python2.7 python2.7-dev lua5.1 lua5.1-policy-dev"
 
 
-** GET STARTED **
-
+### GET STARTED
 The module will only run on a linux-based 64bit distribution, because of the clingo4 binary. If you want to run on another system (e.g. Mac), you have to get your own clingo4 binary. I suggest to use a Virtual Machine instead.
 To run the blending, execute "run-blending.py" using python. By default it will do a cadence fusion example to obtain the Tritone cadence, as described in the 2015 IJCAI paper "Computational invention of cadences and chord progressions by conceptual chord-blending" by Eppe et al.  To run another example, adopt the file settings.py.
 
@@ -52,8 +48,7 @@ If you want to do other blendings, modify the settings.py as follows:
 	- A priority of "-1" means that the axiom, operator, predicate or sort is fixed and not removable. 
 	
 
-** Important limitations and TODOs ** 
-
+### Important limitations and TODOs 
 	- Operator,  predicate and sort names must be disjoint in each specification, i.e. a operator name can 
 	not be a predicate name or a sort name. Furthermore, overloading of operators or predicates is not supported. Otherwise this will result in unpredictable behavior.
 	- Logical Equivalence of axioms is currently determined by syntactic equivalence. This is of course a much stronger form of equivalence and a serious limitation of the system.
