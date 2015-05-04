@@ -1,0 +1,74 @@
+%% Set up the vocabulary
+spec Symbols = 
+    free type NoteSymb ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | x0
+    free type ModeSymb ::= min | maj | dim | aug
+    free type ExtSymb ::= six | seven | nine | eleven | thirteen
+end
+
+%% A theory about chords
+spec Chord = 
+Symbols then
+    sorts Chord Base Mode Ext
+    ops 
+        triadChord : Base * Mode -> Chord
+        
+        isBase : Base -> NoteSymb
+        isMode : Mode -> ModeSymb
+        isExt : Ext -> ExtSymb
+    
+    preds    
+        hasExt : Chord * Ext
+end
+
+%% Define chord instances:
+spec GenericChordInstance = Chord then
+    ops
+        c : Chord
+        b : Base
+        m : Mode
+        . c = triadChord(b,m)
+end
+
+
+%% These instances inherit from the generic chord instance. That is, when blending the two, they have a common generic space. 
+spec EMaj7Chord = 
+GenericChordInstance then
+    ops 
+    sevenExt : Ext
+    . isBase(b) = 4
+    . isMode(m) = maj
+    . isExt(sevenExt) = seven
+    . hasExt(c, sevenExt)
+end
+
+spec DMinChord = 
+GenericChordInstance then
+    . isBase(b) = 2
+    . isMode(m) = min
+end
+
+view GenToEMaj7 : GenericChordInstance to EMaj7Chord end
+view GenToDMin : GenericChordInstance to DMinChord end
+
+%% This blend is inconsistent
+spec NaiveBlend = combine GenToEMaj7,GenToDMin end
+
+%% Now the relaxed versions that result in a consistent blend
+spec EMaj7Chord_rel = GenericChordInstance then
+    ops
+    sevenExt : Ext
+    . isBase(b) = 4
+    . isExt(sevenExt) = seven
+    . hasExt(c, sevenExt)
+end
+
+spec DMinChord_rel = 
+GenericChordInstance then
+    . isMode(m) = min
+end
+
+view GenToEMaj7_rel : GenericChordInstance to EMaj7Chord_rel end
+view GenToDMin_rel : GenericChordInstance to DMinChord_rel end
+
+%% This should be consistent, but neither eprover nor darwin return a result (Axioms concerning free types screw it up?)
+spec Blend = combine GenToEMaj7_rel,GenToDMin_rel end

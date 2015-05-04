@@ -1,0 +1,196 @@
+spec SemSys = 
+  sort PriorityDummySort
+  op prioDummyOp : PriorityDummySort
+end
+
+%%% HERE WITH HAVE A VERSION OF NATURALS WITH FACT AS AN EXAMPLE FUNCTION
+%%% THE SUCCESSOR FUNCTION IS DEFINED WITH DUPLICATE ARGUMENTS
+%%% THIS IS SO THAT THE VIEW TO THE GENERIC SPACE CAN WORK
+%%% SO INSTEAD OF S(X) WE WRITE S(X,X)
+
+
+%% spec NatSuc_SumBlend = 
+%%    sort Element
+%%    sort Nat
+%%    op canonical_element: Element
+%%    op zero:Nat
+%%    op s: Element * Nat -> Nat
+%%    op plus : Nat * Nat -> Nat
+%%    op sum : Nat -> Nat
+%%    op qsum : Nat * Nat -> Nat
+%%    forall x,y:Nat
+%%    %%   . exists a: Nat . s(canonical_element,x) = a
+%%    %%   . not (s(canonical_element,x) = zero)      %% remove this in GEN
+%%    %%    . fact(zero) = s(canonical_element,zero)  %% remove this in GEN
+%%    %%    . fact(s(canonical_element,x)) = times(s(canonical_element,x),fact(x))  %% remove this in GEN
+%%    %%    . qfact(s(canonical_element,x),y) = times(qfact(x,s(canonical_element,x)),y) %% remove this in GEN
+%%       . qfact(zero,x) = x 
+   
+%%       . plus(zero,x) = x
+%%       . plus(s(canonical_element,x),y) = s(canonical_element,plus(x,y))
+%%    %%    . times(zero,y) = zero  %remove this in gen
+%%    %%    . times(s(canonical_element,x),y) = plus(y,times(x,y)) %remove this in gen
+
+%%    %%    . times(fact(x),y) = qfact(x,y)  %This is the Eureka lemma that we want to obtain by blending
+%%    %%    . fact(x) = qfact(x,zero)    %implied %% This is the theorem that we want to prove using the Eureka lemma
+%% end
+
+
+spec NatSucCanonical = SemSys then
+   sort Element
+   sort Nat   
+   op zero:Nat                    %% maps to nil  / null
+   op s: Element * Nat -> Nat     %% maps to cons / constructor
+   op times : Nat * Nat -> Nat    %% maps to app  / auxfunc
+   op fact: Nat -> Nat            %% maps to rev  / recfunc
+   op qfact: Nat * Nat -> Nat     %% maps to qref / qrecfunc
+   op canonical_element: Element  %%
+   op plus : Nat * Nat -> Nat     %% remove
+   
+   forall x,y:Nat
+       %% These axioms have a similar (but not necessarily equivalent) analogous partner axiom in spec List
+       . times(zero,x) = zero                 %(Ax-multizerozero:p:2)%                             %% remove
+       . qfact(zero,x) = x                    %(Ax-qfactzerozero:p:9)%
+       . plus(s(canonical_element,x),y) = s(canonical_element,plus(x,y))      %(Ax-plusSucc:p:3)%  %% remove
+       . fact(zero) = s(canonical_element,zero)               %(Ax-factZeroSuccZero:p:4)%          %% remove
+       %% . fact(s(canonical_element,x)) = times(fact(x),s(canonical_element,x))  %(Ax_multiplyNumberWithFactorial:p:1)% %% remove
+       %% . qfact(s(canonical_element,x),y) = times(qfact(x,s(canonical_element,x)),y)  %(Ax_qfacttimessucc:p:2)%        %% remove
+       %% . not (s(canonical_element,x) = zero) %(Ax_succNotZero:p:8)%
+       %% The following axioms have no similar analogous partner in spec List 
+      %%  . plus(zero,x) = x              %(Ax-zeroPlusEqual:p:5)%                                                      %% remove
+      %%  . times(s(canonical_element,x),y) = plus(y,times(x,y))    %(Ax-timesPlusRel:p:3)%                             %% remove
+
+      . times(fact(x),y) = qfact(x,y)  %(Ax-heurekaLemmaNat:p:20)% %% This is the Eureka lemma that we know is correct for naturals and that we want  to obtain by blending for lists.
+       . fact(x) = qfact(x,zero)          %(targetTheoremNat:p:20)% %% This is the target theorem that we want to prove using the Eureka lemma
+
+    %% This is our dummy lemma to set priorities of operators, predicats and sorts
+    . prioDummyOp = prioDummyOp %(Element:p:17--Nat:p:16--zero:p:15--s:p:14--times:p:13--fact:p:10--qfact:p:10--canonical_element:p:1--plus:p:6)%
+end
+
+spec NatSuc = SemSys then
+   sort Nat   
+   op zero:Nat                    %% maps to nil  / null
+   op s: Nat -> Nat     %% maps to cons / constructor
+   op times : Nat * Nat -> Nat    %% maps to app  / auxfunc
+   op fact: Nat -> Nat            %% maps to rev  / recfunc
+   op qfact: Nat * Nat -> Nat     %% maps to qref / qrecfunc
+   op plus : Nat * Nat -> Nat     %% remove
+   
+   forall x,y:Nat
+       %% These axioms have a similar (but not necessarily equivalent) analogous partner axiom in spec List
+       . times(zero,x) = zero                 %(Ax-multizerozero:p:2)%                             %% remove
+       . qfact(zero,x) = x                    %(Ax-qfactzerozero:p:9)%
+       . plus(s(x),y) = s(plus(x,y))          %(Ax-plusSucc:p:3)%  %% remove
+       . fact(zero) = s(zero)                 %(Ax-factZeroSuccZero:p:4)%          %% remove
+       . fact(s(x)) = times(fact(x),s(x))  %(Ax_multiplyNumberWithFactorial:p:1)% %% remove
+       . qfact(s(x),y) = times(qfact(x,s(x)),y)  %(Ax_qfacttimessucc:p:2)%        %% remove
+       . not (s(x) = zero) %(Ax_succNotZero:p:8)%
+       %% The following axioms have no similar analogous partner in spec List 
+       . plus(zero,x) = x              %(Ax-zeroPlusEqual:p:5)%                                                      %% remove
+       . times(s(x),y) = plus(y,times(x,y))    %(Ax-timesPlusRel:p:3)%                             %% remove
+
+      . times(fact(x),y) = qfact(x,y)  %(Ax-heurekaLemmaNat:p:20)% %% This is the Eureka lemma that we know is correct for naturals and that we want  to obtain by blending for lists.
+       . fact(x) = qfact(x,zero)          %(targetTheoremNat:p:20)% %% This is the target theorem that we want to prove using the Eureka lemma
+
+    %% This is our dummy lemma to set priorities of operators, predicats and sorts
+    . prioDummyOp = prioDummyOp %(Nat:p:16--zero:p:15--s:p:4--times:p:13--fact:p:12--qfact:p:11--plus:p:6)%
+end
+
+
+
+%%% 
+spec List = SemSys then
+  sort L
+  sort El
+     op nil : L                 %% maps to zero   / null
+     op cons : El*L -> L        %% maps to s      / constructor
+     op app : L * L -> L        %% maps to times  / auxfunc
+     op rev : L -> L            %% maps to fact   / recfunc
+     op qrev : L * L -> L       %% maps to qfact  / qrecfunc
+     forall x,y: L, h : El
+       . app(nil,x) = x                             %(Ax-AppNilIsId:p:2)% %% remove
+       . qrev(nil,x) = x                            %(Ax-qrevnilxx:p:4)%
+       . app(cons(h,x),y) = cons(h,app(x,y))       %% remove
+       . rev(nil) = nil                            %% remove
+       . rev(cons(h,x)) = app(rev(x),cons(h,nil))  %% remove -- This is similar to axiom (Ax_multiplyNumberWithFactorial), but can not be mapped because it contains nil in the last element of its rhs, not x       
+       . qrev(cons(h,x),y) = qrev(x,cons(h,y))     %% remove
+       . not (cons(h,x) = nil)                      %(Ax_consNotNil:p:3)%
+       %% . app(rev(x),y) = qrev(x,y) %(Ax-heurekaLemmaLists:p:20)% %% This is the eureka lemma that we want to have for lists.
+       . rev(x) = qrev(x,nil)      %(Ax-targetTheoremLists:p:20)% %% This is the target theorem of that we know it's correct for naturals, and that we want to "translate" to the theory of lists.
+
+       %% This is our dummy lemma to set priorities of operators, predicats and sorts
+     . prioDummyOp = prioDummyOp %(El:p:17--L:p:16--nil:p:15--cons:p:4--app:p:13--rev:p:10--qrev:p:10--h:p:10)%
+end
+
+
+%%% HERE IS A WEAKENED VERSION WITH SOME AXIOMS REMOVED
+%% spec GenNatSuc = 
+%%    sort Nat
+%%    sort Element
+%%    op canonical_element: Element
+%%    op zero:Nat
+%%    op s: Element * Nat -> Nat
+%%    op fact: Nat -> Nat
+%%    op qfact: Nat * Nat -> Nat
+%%    op plus: Nat * Nat -> Nat
+%%    op times : Nat * Nat -> Nat
+%%    forall x,y:Nat    
+%%       . qfact(zero,x) = x 
+%%       . fact(x) = qfact(x,zero)    %implied
+%%       . times(fact(x),y) = qfact(x,y)  %lemma required to prove this
+%%       . times(zero,y) = zero
+%% end
+
+
+%%% NOW WE CREATE A GENERIC SPACE WITH NULL ELEMENT
+%%% CONSTRUCTOR ELEMENT
+%%% RECURSIVE FUNCTION
+%%% TAIL_RECURSIVE FUNCTION
+%%% AUXILIARY FUNCTION
+
+%% spec Generic =
+%%   sorts H,G
+%%   op null:G
+%%   op constructor: H * G -> G
+%%   op recfunc: G -> G
+%%   op qrecfunc: G * G -> G
+%%   op auxfunc: G * G -> G
+%% end
+
+%% view I1 : Gen to NatSuc = 
+%%    H |-> Element,
+%%    G |-> Nat,
+%%    null |-> zero,
+%%    constructor |-> s,
+%%    recfunc |-> fact,
+%%    qrecfunc |-> qfact,
+%%    auxfunc |-> times
+
+%% view I2 : Gen to List = 
+%%    H |-> El,
+%%    G |-> L,
+%%    null |-> nil,
+%%    constructor |-> cons,
+%%    recfunc |-> rev,
+%%    qrecfunc |-> qrev,
+%%    auxfunc |-> app
+
+%% view I3 : Gen to GenNatSuc = 
+%%    H |-> Element,
+%%    G |-> Nat,
+%%    null |-> zero,
+%%    constructor |-> s,
+%%    recfunc |-> fact,
+%%    qrecfunc |-> qfact,
+%%    auxfunc |-> times
+
+%% %% THIS IS IMMEDIATELY INCONSISTENT
+%% spec colimit = combine I1,I2
+%%   with 
+%%        s |-> cons,
+%%        zero |-> nil
+
+%% spec colimit_consistent = combine I2, I3 
+%%    with 
+%%        s |-> cons,
+%%        zero |-> nil

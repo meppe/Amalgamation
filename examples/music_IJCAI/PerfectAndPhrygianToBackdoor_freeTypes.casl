@@ -1,0 +1,567 @@
+spec Symbols = 
+%%  Note can be interpreted as an absolute note
+%%  Or an interval
+    free type Note ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | x | x1
+%% can describe interals in the following way
+    free type Modifier ::= major | minor | diminished | perfect | augmented
+%% these operators act on intervals
+%% e.g. a fifth + a fifth = a ninth
+%% start at a C, go up a fith, you get to G
+%% go up a fifth from G, you get to D
+%% so an interval which is 7, plus another, you get 2
+    ops __ + __: Note * Note -> Note
+        __ - __: Note * Note -> Note
+%%% this gives a calculus for how to add intervals
+    . 0 + 0 = 0
+    . 0 + 1 = 1
+    . 0 + 2 = 2
+    . 0 + 3 = 3
+    . 0 + 4 = 4
+    . 0 + 5 = 5
+    . 0 + 6 = 6
+    . 0 + 7 = 7
+    . 0 + 8 = 8
+    . 0 + 9 = 9
+    . 0 + x = x
+    . 0 + x1 = x1
+    . 1 + 0 = 1
+    . 1 + 1 = 2
+    . 1 + 2 = 3
+    . 1 + 3 = 4
+    . 1 + 4 = 5
+    . 1 + 5 = 6
+    . 1 + 6 = 7
+    . 1 + 7 = 8
+    . 1 + 8 = 9
+    . 1 + 9 = x
+    . 1 + x = x1
+    . 1 + x1 = 0
+    . 2 + 0 = 2
+    . 2 + 1 = 3
+    . 2 + 2 = 4
+    . 2 + 3 = 5
+    . 2 + 4 = 6
+    . 2 + 5 = 7
+    . 2 + 6 = 8
+    . 2 + 7 = 9
+    . 2 + 8 = x
+    . 2 + 9 = x1
+    . 2 + x = 0
+    . 2 + x1 = 1
+    . 3 + 0 = 3
+    . 3 + 1 = 4
+    . 3 + 2 = 5
+    . 3 + 3 = 6
+    . 3 + 4 = 7
+    . 3 + 5 = 8
+    . 3 + 6 = 9
+    . 3 + 7 = x
+    . 3 + 8 = x1
+    . 3 + 9 = 0
+    . 3 + x = 1
+    . 3 + x1 = 2
+    . 4 + 0 = 4
+    . 4 + 1 = 5
+    . 4 + 2 = 6
+    . 4 + 3 = 7
+    . 4 + 4 = 8
+    . 4 + 5 = 9
+    . 4 + 6 = x
+    . 4 + 7 = x1
+    . 4 + 8 = 0
+    . 4 + 9 = 1
+    . 4 + x = 2
+    . 4 + x1 = 3
+    . 5 + 0 = 5
+    . 5 + 1 = 6
+    . 5 + 2 = 7
+    . 5 + 3 = 8
+    . 5 + 4 = 9
+    . 5 + 5 = x
+    . 5 + 6 = x1
+    . 5 + 7 = 0
+    . 5 + 8 = 1
+    . 5 + 9 = 2
+    . 5 + x = 3
+    . 5 + x1 = 4
+    . 6 + 0 = 6
+    . 6 + 1 = 7
+    . 6 + 2 = 8
+    . 6 + 3 = 9
+    . 6 + 4 = x
+    . 6 + 5 = x1
+    . 6 + 6 = 0
+    . 6 + 7 = 1
+    . 6 + 8 = 2
+    . 6 + 9 = 3
+    . 6 + x = 4
+    . 6 + x1 = 5
+    . 7 + 0 = 7
+    . 7 + 1 = 8
+    . 7 + 2 = 9
+    . 7 + 3 = x
+    . 7 + 4 = x1
+    . 7 + 5 = 0
+    . 7 + 6 = 1
+    . 7 + 7 = 2
+    . 7 + 8 = 3
+    . 7 + 9 = 4
+    . 7 + x = 5
+    . 7 + x1 = 6
+    . 8 + 0 = 8
+    . 8 + 1 = 9
+    . 8 + 2 = x
+    . 8 + 3 = x1
+    . 8 + 4 = 0
+    . 8 + 5 = 1
+    . 8 + 6 = 2
+    . 8 + 7 = 3
+    . 8 + 8 = 4
+    . 8 + 9 = 5
+    . 8 + x = 6
+    . 8 + x1 = 7
+    . 9 + 0 = 9
+    . 9 + 1 = x
+    . 9 + 2 = x1
+    . 9 + 3 = 0
+    . 9 + 4 = 1
+    . 9 + 5 = 2
+    . 9 + 6 = 3
+    . 9 + 7 = 4
+    . 9 + 8 = 5
+    . 9 + 9 = 6
+    . 9 + x = 7
+    . 9 + x1 = 8
+    . x + 0 = x
+    . x + 1 = x1
+    . x + 2 = 0
+    . x + 3 = 1
+    . x + 4 = 2
+    . x + 5 = 3
+    . x + 6 = 4
+    . x + 7 = 5
+    . x + 8 = 6
+    . x + 9 = 7
+    . x + x = 8
+    . x + x1 = 9
+    . x1 + 0 = x1
+    . x1 + 1 = 0
+    . x1 + 2 = 1
+    . x1 + 3 = 2
+    . x1 + 4 = 3
+    . x1 + 5 = 4
+    . x1 + 6 = 5
+    . x1 + 7 = 6
+    . x1 + 8 = 7
+    . x1 + 9 = 8
+    . x1 + x = 9
+    . x1 + x1 = x
+    . 0 - 0 = 0
+    . 0 - 1 = x1
+    . 0 - 2 = x
+    . 0 - 3 = 9
+    . 0 - 4 = 8
+    . 0 - 5 = 7
+    . 0 - 6 = 6
+    . 0 - 7 = 5
+    . 0 - 8 = 4
+    . 0 - 9 = 3
+    . 0 - x = 2
+    . 0 - x1 = 1
+    . 1 - 0 = 1
+    . 1 - 1 = 0
+    . 1 - 2 = x1
+    . 1 - 3 = x
+    . 1 - 4 = 9
+    . 1 - 5 = 8
+    . 1 - 6 = 7
+    . 1 - 7 = 6
+    . 1 - 8 = 5
+    . 1 - 9 = 4
+    . 1 - x = 3
+    . 1 - x1 = 2
+    . 2 - 0 = 2
+    . 2 - 1 = 1
+    . 2 - 2 = 0
+    . 2 - 3 = x1
+    . 2 - 4 = x
+    . 2 - 5 = 9
+    . 2 - 6 = 8
+    . 2 - 7 = 7
+    . 2 - 8 = 6
+    . 2 - 9 = 5
+    . 2 - x = 4
+    . 2 - x1 = 3
+    . 3 - 0 = 3
+    . 3 - 1 = 2
+    . 3 - 2 = 1
+    . 3 - 3 = 0
+    . 3 - 4 = x1
+    . 3 - 5 = x
+    . 3 - 6 = 9
+    . 3 - 7 = 8
+    . 3 - 8 = 7
+    . 3 - 9 = 6
+    . 3 - x = 5
+    . 3 - x1 = 4
+    . 4 - 0 = 4
+    . 4 - 1 = 3
+    . 4 - 2 = 2
+    . 4 - 3 = 1
+    . 4 - 4 = 0
+    . 4 - 5 = x1
+    . 4 - 6 = x
+    . 4 - 7 = 9
+    . 4 - 8 = 8
+    . 4 - 9 = 7
+    . 4 - x = 6
+    . 4 - x1 = 5
+    . 5 - 0 = 5
+    . 5 - 1 = 4
+    . 5 - 2 = 3
+    . 5 - 3 = 2
+    . 5 - 4 = 1
+    . 5 - 5 = 0
+    . 5 - 6 = x1
+    . 5 - 7 = x
+    . 5 - 8 = 9
+    . 5 - 9 = 8
+    . 5 - x = 7
+    . 5 - x1 = 6
+    . 6 - 0 = 6
+    . 6 - 1 = 5
+    . 6 - 2 = 4
+    . 6 - 3 = 3
+    . 6 - 4 = 2
+    . 6 - 5 = 1
+    . 6 - 6 = 0
+    . 6 - 7 = x1
+    . 6 - 8 = x
+    . 6 - 9 = 9
+    . 6 - x = 8
+    . 6 - x1 = 7
+    . 7 - 0 = 7
+    . 7 - 1 = 6
+    . 7 - 2 = 5
+    . 7 - 3 = 4
+    . 7 - 4 = 3
+    . 7 - 5 = 2
+    . 7 - 6 = 1
+    . 7 - 7 = 0
+    . 7 - 8 = x1
+    . 7 - 9 = x
+    . 7 - x = 9
+    . 7 - x1 = 8
+    . 8 - 0 = 8
+    . 8 - 1 = 7
+    . 8 - 2 = 6
+    . 8 - 3 = 5
+    . 8 - 4 = 4
+    . 8 - 5 = 3
+    . 8 - 6 = 2
+    . 8 - 7 = 1
+    . 8 - 8 = 0
+    . 8 - 9 = x1
+    . 8 - x = x
+    . 8 - x1 = 9
+    . 9 - 0 = 9
+    . 9 - 1 = 8
+    . 9 - 2 = 7
+    . 9 - 3 = 6
+    . 9 - 4 = 5
+    . 9 - 5 = 4
+    . 9 - 6 = 3
+    . 9 - 7 = 2
+    . 9 - 8 = 1
+    . 9 - 9 = 0
+    . 9 - x = x1
+    . 9 - x1 = x
+    . x - 0 = x
+    . x - 1 = 9
+    . x - 2 = 8
+    . x - 3 = 7
+    . x - 4 = 6
+    . x - 5 = 5
+    . x - 6 = 4
+    . x - 7 = 3
+    . x - 8 = 2
+    . x - 9 = 1
+    . x - x = 0
+    . x - x1 = x1
+    . x1 - 0 = x1
+    . x1 - 1 = x
+    . x1 - 2 = 9
+    . x1 - 3 = 8
+    . x1 - 4 = 7
+    . x1 - 5 = 6
+    . x1 - 6 = 5
+    . x1 - 7 = 4
+    . x1 - 8 = 3
+    . x1 - 9 = 2
+    . x1 - x = 1
+    . x1 - x1 = 0
+end
+
+spec RelChord = 
+Symbols then
+%% primary sort for RelChord 
+    sort RelChord 
+
+%% a chord can be defined via relative positions from the root 
+    preds    
+        hasRelNote : RelChord * Note
+    ops
+%% thirdrel is a partial function defining the third (minor, major)
+%% bassrel determine which note is in the bass - this must be in the chord
+%% this guarantees one note at least
+        thirdrel: RelChord ->? Modifier                   %(thirdrel_def)%  
+        bassrel: RelChord -> Note                         %(bassrel_def)%
+%% other potential interesting functions?
+        seventhrel:RelChord ->? Modifier                 %(seventhrel_def)%
+        sixthrel:RelChord ->? Modifier                    %(sixthrel_def)%
+        fifthrel: RelChord ->? Modifier                   %(fifthrel_def)%
+
+%% these are definitions for what each modifier means in terms of notes
+%% e.g. a perfect fifth is a note interval of 7 (semitones)
+ forall c:RelChord,n:Note
+       . bassrel(c)=n => hasRelNote(c,n)                %(bassrel)%  
+       . thirdrel(c) = minor => hasRelNote(c,3)         %(minor3rel)%
+       . thirdrel(c) = major => hasRelNote(c,4)         %(major3rel)%
+       . seventhrel(c) = minor => hasRelNote(c,x)       %(minor7rel)%
+       . seventhrel(c) = major => hasRelNote(c,x1)      %(major7rel)%
+       . sixthrel(c) = minor => hasRelNote(c,8)         %(minor6rel)%
+       . sixthrel(c) = major => hasRelNote(c,9)         %(major6rel)%
+       . fifthrel(c) = perfect => hasRelNote(c,7)       %(perfect5rel)%
+       . fifthrel(c) = diminished => hasRelNote(c,6)    %(dimin5rel)%
+       . fifthrel(c) = augmented => hasRelNote(c,8)     %(augment5rel)%
+end
+
+spec AbsChord = 
+RelChord then 
+%% primary sort for RelChord 
+     sort AbsChord < RelChord
+
+     preds
+        hasAbsNote: AbsChord * Note                       
+     ops
+%% here absolute note positions are defined for specific chords
+        root: AbsChord -> Note                                 %(root_def)%
+%% this axiom relate relative to absolute note positions
+    forall c:AbsChord,n:Note    
+       . hasRelNote(c,n) <=> hasAbsNote(c,(root(c)+n))         %(reltoabs_note)%
+end
+
+%%% CADENCE
+%% this is simply two chords, and relation between them
+%% rootRel means the relation between the first and second
+%% e.g. rootRel(G major,C major) = 7
+spec Cadence = 
+  RelChord then
+  ops prefinal: RelChord
+      final: RelChord
+      rootRel: RelChord * RelChord -> Note
+end
+
+%%% PERFECT CADENCE
+%% This is the specification of a perfect Cadence
+spec PerfectCadence = 
+  Cadence then 
+    . rootRel(prefinal,final) = 7   %%this is of low importance
+    . hasRelNote(prefinal,0)
+    . hasRelNote(prefinal,4)
+    . hasRelNote(prefinal,7)
+    . hasRelNote(prefinal,x)
+    . hasRelNote(final,0)
+    . hasRelNote(final,7)
+    . fifthrel(final) = perfect
+    . fifthrel(prefinal) = perfect
+    . seventhrel(prefinal) = minor
+    . thirdrel(prefinal) = major
+end 
+
+%% WEAKENED PERFECT CADENCE
+%% here is a weaekend version
+spec GenPerfectCadence = 
+  Cadence then
+    . hasRelNote(prefinal,0)
+    . hasRelNote(prefinal,4)
+    . hasRelNote(prefinal,7)
+    . hasRelNote(prefinal,x)
+    . hasRelNote(final,0)
+    . hasRelNote(final,7)
+    . fifthrel(final) = perfect
+    . fifthrel(prefinal) = perfect
+    . seventhrel(prefinal) = minor
+    . thirdrel(prefinal) = major
+end 
+
+%%% PHRYGIAN CADENCE
+spec PhrygianCadence = 
+  Cadence then
+    . rootRel(prefinal,final) = x  %%of high importance
+    . hasRelNote(prefinal,0)
+    . hasRelNote(prefinal,3)       %% of low importance(???)
+    . hasRelNote(prefinal,7)
+    . hasRelNote(final,0)
+    . hasRelNote(final,7)
+    . fifthrel(final) = perfect
+    . fifthrel(prefinal) = perfect
+    . thirdrel(prefinal) = minor  %% of low importance
+end
+
+%% weakened version 
+spec GenPhrygianCadence = 
+  Cadence then
+    . rootRel(prefinal,final) = x
+    . hasRelNote(prefinal,0)
+    . hasRelNote(prefinal,7)
+    . hasRelNote(final,0)
+    . hasRelNote(final,7)
+    . fifthrel(final) = perfect
+    . fifthrel(prefinal) = perfect
+end
+
+%%% ABS_CADENCE
+%% an absolute cadence is a cadence which is made absolute by fixing the root
+%% the root of the prefinal can be calculated from the the rootRel function
+spec AbsCadence = 
+  Cadence then
+  AbsChord then
+  op finalroot: Note
+  .  root(final as AbsChord) = finalroot  
+  .  root(prefinal as AbsChord) = finalroot + rootRel(prefinal,final)
+end
+
+%% here is that which is common to both cadences
+%% this consitutes a generic space for the cadence blend
+%% the cadence means all specs have two chords
+spec GenericCadence = 
+  AbsCadence then
+  . root(final as AbsChord) = 0
+  . hasRelNote(final,0)
+  . hasRelNote(final,7)
+  . hasRelNote(prefinal,0)
+  . hasRelNote(prefinal,7)
+  . fifthrel(final) = perfect
+  . fifthrel(prefinal) = perfect
+end
+
+%% a C perfect cadence is a perfect cadence
+%% inheriting also an absolute cadence
+%% which is has final root fixed at (0) C
+spec CPerfectCadence = 
+   AbsCadence then
+   PerfectCadence then
+   . root(final as AbsChord) = 0
+end
+
+%%% weakened version
+spec GenCPerfectCadence = 
+   AbsCadence then
+   GenPerfectCadence then
+   . root(final as AbsChord) = 0
+end
+
+%% Phrygian cadence with final root fixed at 0
+spec CPhrygianCadence = 
+    AbsCadence then
+    PhrygianCadence then
+    . root(final as AbsChord) = 0
+end
+
+%% weakened version
+spec GenCPhrygianCadence = 
+    AbsCadence then
+    GenPhrygianCadence then
+    . root(final as AbsChord) = 0
+end
+
+
+%% here is different generic space which associates only one chord in common
+%% the input theories have two chords, the generic 1
+%% this means the pushout will have 3 - a progression
+spec GenericChordProgression = 
+  RelChord then
+  op c: RelChord
+  op GenericrootRel: RelChord * RelChord -> Note
+  . hasRelNote(c,0)
+  . hasRelNote(c,7)
+  . fifthrel(c) = perfect
+end
+
+
+%% an alternative generic space for specifying two chords 
+spec GenericChordCadence = 
+  AbsChord then
+  ops c,d:RelChord
+  op GenericrootRel: RelChord * RelChord -> Note
+  op Genericroot: Note
+  . hasRelNote(c,0)
+  . hasRelNote(c,7)
+  . fifthrel(c) = perfect
+  . hasRelNote(d,0)
+  . hasRelNote(d,7)
+  . fifthrel(d) = perfect
+  . root(d as AbsChord) = 0
+end
+
+
+interpretation I1: GenericCadence to CPerfectCadence
+interpretation I2: GenericCadence to CPhrygianCadence
+
+interpretation I3: GenericCadence to GenCPerfectCadence
+interpretation I4: GenericCadence to GenCPhrygianCadence
+
+interpretation I5: GenericChordProgression to CPhrygianCadence =
+   c |-> final,
+   GenericrootRel |-> rootRel
+   
+interpretation I6: GenericChordProgression to PerfectCadence =
+  c |-> prefinal,
+  GenericrootRel |-> rootRel
+
+interpretation I7: GenericChordCadence to GenCPerfectCadence =
+  c |-> prefinal,
+  d |-> final,
+  GenericrootRel |-> rootRel,
+  Genericroot |-> finalroot
+
+interpretation I8: GenericChordCadence to GenCPhrygianCadence =
+  c |-> prefinal,
+  d |-> final,
+  GenericrootRel |-> rootRel,
+  Genericroot |-> finalroot
+
+spec cadence_blend_from_shared_chords = combine I7,I8
+
+spec inconsistent_blend = combine I1,I2
+
+spec generalised_blend = combine I3,I4
+
+spec progression = combine I5,I6
+
+spec BackdoorCadence = 
+  Cadence then
+    . rootRel(prefinal,final) = x
+    . hasRelNote(prefinal,0)
+    . hasRelNote(prefinal,4)
+    . hasRelNote(prefinal,7)
+    . hasRelNote(prefinal,x)
+    . hasRelNote(final,0)
+    . hasRelNote(final,7)
+    . fifthrel(final) = perfect
+    . fifthrel(prefinal) = perfect
+    . thirdrel(prefinal) = major
+    . seventhrel(prefinal) = minor
+end
+
+spec CBackdoorCadence = 
+    AbsCadence then
+    BackdoorCadence then
+    . root(final as AbsChord) = 0
+end
+
+
+interpretation ref1: generalised_blend to CBackdoorCadence
+
+interpretation ref2: cadence_blend_from_shared_chords to CBackdoorCadence

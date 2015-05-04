@@ -1,0 +1,25 @@
+
+
+spec Boat = 
+    sort Passenger < Person
+    ops 
+        captainOfBoat : Passenger %% The captain of a Boat must also be a passenger, because he must always be on the ship.
+end
+
+spec House = 
+    sort Inhabitant < Person
+    ops 
+        ownerOfHouse : Person %% The owner of a House must not necessarily also be an inhabitant. Its just some person. 
+end
+
+spec Generic = 
+    sort Person
+    ops
+        bossOfObject : Person
+end
+
+view GenToHouse : Generic to House = bossOfObject : Person |-> ownerOfHouse  end
+view GenToBoat : Generic to Boat end
+
+%% How to generalise this?
+
