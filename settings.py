@@ -21,10 +21,13 @@ blendValuePercentageBelowHighestValueToKeep = 0
 eproverTimeLimit = 4
 darwinTimeLimit = 0.1
 
-
 ###### Path to the HETS executable ######
 hetsExe = 'hets'
-# hetsExe = '/media/psf/Home/svn/coinvent/Amalgamation/hetsPrio' # This is the experimental version with priorities by Mihai.
+
+###### Switch to enable the explicit generation of blend files (see function writeBlends.py) ######
+genExplicitBlendFiles = True
+
+
 
 
 ###################################################################
@@ -34,11 +37,12 @@ hetsExe = 'hets'
 # inputFile = "examples/LPNMR/houseBoat.casl"
 # inputSpaceNames = ["Boat","House"]
 
-inputFile = "examples/LPNMR/cadenceBlendFusionTest.casl"
-inputSpaceNames = ["PhrygianCadence","PerfectCadence"]
+# inputFile = "examples/LPNMR/cadenceBlendFusionTest.casl"
+# inputSpaceNames = ["PhrygianCadence","PerfectCadence"]
 
-# inputFile = "examples/LPNMR/naturalsAndLists.casl"
-# inputSpaceNames = ["NatSuc","List"]
+# inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
+inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
+inputSpaceNames = ["Nat","List"]
 
 # inputFile = "examples/metaphorTest.casl"
 # inputSpaceNames = ["EvilCreature","Fire"]

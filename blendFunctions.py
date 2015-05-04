@@ -246,7 +246,8 @@ def prettyPrintBlend(genInputSpaces,combi,modelAtoms):
 
 # This function takes a list of blend speciications and writes them to disk.
 def writeBlends(blends):
-    raw_input
+    global genExplicitBlendFiles
+    # raw_input
     os.system("rm Blend_*.casl")
     os.system("rm Blend_*.th")
     bNum = 0
@@ -293,17 +294,20 @@ def writeBlends(blends):
         outFile.write(fullBlendStr)
         outFile.close()
 
-        # os.system("cp " + thName + " " + thName[:-3]+".casl")
-        os.system("rm *.th")
-        # blendFilesList += thName[:-3]+".casl\n"
-        blendFilesList += fName
+        if genExplicitBlendFiles == True:
+            os.system("cp " + thName + " " + thName[:-3]+".casl")
+            os.system("rm *.th")
+            blendFilesList += thName[:-3]+".casl\n"
+        
+        # blendFilesList += fName
         
         bNum = bNum + 1
 
     # raw_input
-    fileListFile = open("blendFiles.txt","w")
-    fileListFile.write(blendFilesList)
-    fileListFile.close()
+    if genExplicitBlendFiles == True:
+        fileListFile = open("blendFiles.txt","w")
+        fileListFile.write(blendFilesList)
+        fileListFile.close()
 
 # Returns an array of possible Blend combinations and provides a blend value for the combination
 def getBlendCombiCost(genInputSpaces):

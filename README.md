@@ -2,9 +2,9 @@ COINVENT Amalgamation Module
 =================================
 
 ### Authors:
-- Manfred Eppe (meppe@iiia.csic.es)						 
-- Roberto Confalonieri (confalonieri@iiia.csic.es)       
-- Ewen MacLean (ewenmaclean@gmail.com)        			 
+- Manfred Eppe (meppe@iiia.csic.es)
+- Roberto Confalonieri (confalonieri@iiia.csic.es)
+- Ewen MacLean (ewenmaclean@gmail.com)
 
 
 ### Overview
@@ -23,8 +23,8 @@ It currently works with CASL only, and relies on HETS (via commandline-call) to 
 		This contains functions to perform the actual blending of the generalized input spaces. 
 
 - Answer Set Programming code:
-	- iterationCore-py.lp
-		This is a Logic Programming file containting the main iteration loops as a python script. 
+	- iterationGeneralize-py.lp
+		This is a Logic Programming file containting the main iteration loops for generalisation as a python script. 
 	- caslInterface.lp
 		This contains casl specific rules that are an interface to the main amalgamation search programs called generalize.lp. and blending.lp
 	- generalize.lp
@@ -39,18 +39,19 @@ It currently works with CASL only, and relies on HETS (via commandline-call) to 
 
 ### Get started
 The module will only run on a linux-based 64bit distribution, because of the clingo4 binary. If you want to run on another system (e.g. Mac), you have to get your own clingo4 binary. I suggest to use a Virtual Machine instead.
-To run the blending, execute "run-blending.py" using python. By default it will do a cadence fusion example to obtain the Tritone cadence, as described in the 2015 IJCAI paper "Computational invention of cadences and chord progressions by conceptual chord-blending" by Eppe et al.  To run another example, adopt the file settings.py.
+To run the blending, execute "run-blending.py" using python. By default it will do the naturals and lists example from the LPNMR paper (takes approx. 5 minutes on an i7 machine with 3gb ram). 
+If you look at the settings.py, you'll also find a cadence fusion example to obtain the Tritone cadence, as described in the LPNMR and the 2015 IJCAI paper "Computational invention of cadences and chord progressions by conceptual chord-blending" by Eppe et al.  To run another example, adopt the file settings.py as follows:
 
-If you want to do other blendings, modify the settings.py as follows:
 	- change the "fName" var and provide the CASL file that contains two specifications to blend.
 	- modify the "specsToBlend" variable and enter the two specs in the casl file that are to be blended. 
 	- Priorities of axioms can be encoded in the axiom names by adding a substring ":p:<number>". Make sure that all prioritised axioms have different names.
-	- Priorities of operators, predicates and sorts can be encoded in the name of a dummy-axiom that has the string ". prioDummyOp = prioDummyOp", by adding a substring "--<Sort, operator or predicate name>_p<number>", to the name of the dummy predicate. This requires to have a dummySort "PrioDummySort" and a dummy operator "prioDummyOperator" in each case Spec. If the axiom ". prioDummyOp = prioDummyOp" is not found in a specfication, then prioritis will always be 0.
+	- Priorities of operators, predicates and sorts can be encoded in the name of a dummy-axiom that has the string ". prioDummyOp = prioDummyOp", by adding a substring "--<Sort, operator or predicate name>_p<number>", to the name of the dummy predicate. This requires to have a dummySort "PrioDummySort" and a dummy operator "prioDummyOperator" in each case Spec. If the axiom ". prioDummyOp = prioDummyOp" is not found in a specfication, then priorities will always be 1.
 	- A priority of "-1" means that the axiom, operator, predicate or sort is fixed and not removable. 
 	
 
 ### Important limitations and TODOs
 Consider the following limitations:
+
 	- Operator,  predicate and sort names must be disjoint in each specification, i.e. a operator name can 
 	not be a predicate name or a sort name. Furthermore, overloading of operators or predicates is not supported. Otherwise this will result in unpredictable behavior.
 	- Logical Equivalence of axioms is currently determined by syntactic equivalence. This is of course a much stronger form of equivalence and a serious limitation of the system.
