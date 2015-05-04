@@ -30,10 +30,11 @@ It currently works with CASL only, and relies on HETS (via commandline-call) to 
 	- generalize.lp
 		This contains the core search rules to generalize towards the generic space. 
 
-- Clingo binary
-	- clingo4 is the 64bit binary of clingo v.4.4.0. I complied it with python and lua support. 
-	- gringo.so are the python libraries for clingo
-	If your system complains that python or lua are not found, do (in ubuntu): "sudo apt-get install python2.7 python2.7-dev lua5.1 lua5.1-policy-dev"
+- Clingo binaries
+	- There are two folders 32bit and 64bit for the respective clingo builds. In each folder there are two files:
+		- clingo4 is the binary of clingo v.4.4.0. I complied it with python and lua support. 
+		- gringo.so are the python libraries for clingo
+	- If your system complains that python or lua are not found, do (in ubuntu): "sudo apt-get install python2.7 python2.7-dev lua5.1 lua5.1-policy-dev"
 
 
 ### Get started
