@@ -34,11 +34,11 @@ hetsExe = 'hets'
 # inputFile = "examples/LPNMR/houseBoat.casl"
 # inputSpaceNames = ["Boat","House"]
 
-# inputFile = "examples/LPNMR/cadenceBlendFusionTest.casl"
-# inputSpaceNames = ["PhrygianCadence","PerfectCadence"]
+inputFile = "examples/LPNMR/cadenceBlendFusionTest.casl"
+inputSpaceNames = ["PhrygianCadence","PerfectCadence"]
 
-inputFile = "examples/LPNMR/naturalsAndLists.casl"
-inputSpaceNames = ["NatSuc","List"]
+# inputFile = "examples/LPNMR/naturalsAndLists.casl"
+# inputSpaceNames = ["NatSuc","List"]
 
 # inputFile = "examples/metaphorTest.casl"
 # inputSpaceNames = ["EvilCreature","Fire"]
