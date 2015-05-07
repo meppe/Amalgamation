@@ -50,8 +50,6 @@ If you look at the settings.py, you'll also find a cadence fusion example to obt
 	
 
 ### Important limitations and TODOs
-Consider the following limitations:
-
 	- Operator,  predicate and sort names must be disjoint in each specification, i.e. a operator name can 
 	not be a predicate name or a sort name. Furthermore, overloading of operators or predicates is not supported. Otherwise this will result in unpredictable behavior.
 	- Logical Equivalence of axioms is currently determined by syntactic equivalence. This is of course a much stronger form of equivalence and a serious limitation of the system.

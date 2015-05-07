@@ -41,10 +41,10 @@ genExplicitBlendFiles = True
 # inputSpaceNames = ["PhrygianCadence","PerfectCadence"]
 
 # inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
-inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
-inputSpaceNames = ["Nat","List"]
+# inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
+# inputSpaceNames = ["Nat","List"]
 
-# inputFile = "examples/metaphorTest.casl"
-# inputSpaceNames = ["EvilCreature","Fire"]
+inputFile = "examples/music_IJCAI/music_blend.casl"
+inputSpaceNames = ["Emaj7","Fmin7"]
 
 
