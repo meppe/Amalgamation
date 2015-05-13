@@ -296,8 +296,8 @@ def writeBlends(blends):
 
         if genExplicitBlendFiles == True:
             os.system("cp " + thName + " " + thName[:-3]+".casl")
-            os.system("rm *.th")
             blendFilesList += thName[:-3]+".casl\n"
+        os.system("rm *.th")
         
         # blendFilesList += fName
         

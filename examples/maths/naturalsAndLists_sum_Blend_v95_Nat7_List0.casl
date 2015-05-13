@@ -1,0 +1,281 @@
+spec Generic = %% InfoValue: 24 -- CompressionValue: 0
+	 sort El	%%prio:3
+	 sort L	%%prio:3
+	 op app : L * L -> L	%%prio:2
+	 op cons : El * L -> L	%%prio:3
+	 op nil : L	%%prio:2
+	 op qrev : L * L -> L	%%prio:2
+	 op rev : L -> L	%%prio:2
+
+	. rev(nil) = nil	%(Ax-revnilnil:p:2)%	%priority(2)%	 %%id:9	eqClass: 9
+	forall x : L . qrev(nil, x) = x	%(Ax-qrevnilxx:p:2)%	%priority(2)%	 %%id:11	eqClass: 11
+	forall x : L . rev(x) = qrev(x, nil)	%(Ax-targetTheoremLists:p:3)%	%priority(3)%	 %%id:15	eqClass: 15
+end
+
+%% Spec values: 
+%% Information value: 30
+%% Compression value: 0
+spec List = %% InfoValue: 30 -- CompressionValue: 0
+	 sort El	%%prio:3
+	 sort L	%%prio:3
+	 op app : L * L -> L	%%prio:2
+	 op cons : El * L -> L	%%prio:3
+	 op nil : L	%%prio:2
+	 op qrev : L * L -> L	%%prio:2
+	 op rev : L -> L	%%prio:2
+
+	. rev(nil) = nil	%(Ax-revnilnil:p:2)%	%priority(2)%	 %%id:9	eqClass: 9
+	forall x : L; h : El . rev(cons(h, x)) = app(rev(x), cons(h, nil))	%(Ax-revcons:p:2)%	%priority(2)%	 %%id:10	eqClass: 10
+	forall x : L . qrev(nil, x) = x	%(Ax-qrevnilxx:p:2)%	%priority(2)%	 %%id:11	eqClass: 11
+	forall x, y : L; h : El . qrev(cons(h, x), y) = qrev(x, cons(h, y))	%(Ax-qrevCons:p:2)%	%priority(2)%	 %%id:12	eqClass: 12
+	forall x : L . app(nil, x) = x	%(Ax-appNilIsId:p:1)%	%priority(1)%	 %%id:13	eqClass: 13
+	forall x, y : L; h : El . app(cons(h, x), y) = cons(h, app(x, y))	%(Ax-appCons:p:1)%	%priority(1)%	 %%id:14	eqClass: 14
+	forall x : L . rev(x) = qrev(x, nil)	%(Ax-targetTheoremLists:p:3)%	%priority(3)%	 %%id:15	eqClass: 15
+end
+
+view GenToList : Generic to List end 
+
+%% Spec values: 
+%% Information value: 33
+%% Compression value: 0
+spec Nat = %% InfoValue: 33 -- CompressionValue: 0
+	 sort Element	%%prio:3
+	 sort Nat	%%prio:3
+	 op c : Element	%%prio:1
+	 op plus : Nat * Nat -> Nat	%%prio:1
+	 op qsum : Nat * Nat -> Nat	%%prio:2
+	 op s : Element * Nat -> Nat	%%prio:3
+	 op sum : Nat -> Nat	%%prio:2
+	 op zero : Nat	%%prio:2
+
+	. sum(zero) = zero	%(Ax-sumzerozero:p:2)%	%priority(2)%	 %%id:0	eqClass: 0
+	forall x : Nat . sum(s(c, x)) = plus(s(c, x), sum(x))	%(Ax-sumsucc:p:2)%	%priority(2)%	 %%id:1	eqClass: 1
+	forall x, y : Nat . qsum(s(c, x), y) = qsum(x, plus(s(c, x), y))	%(Ax-qsumplus:p:2)%	%priority(2)%	 %%id:2	eqClass: 2
+	forall x : Nat . qsum(zero, x) = x	%(Ax-qsumzero:p:2)%	%priority(2)%	 %%id:3	eqClass: 3
+	forall x : Nat . plus(zero, x) = x	%(Ax-pluszero:p:1)%	%priority(1)%	 %%id:4	eqClass: 4
+	forall x, y : Nat . plus(s(c, x), y) = s(c, plus(x, y))	%(Ax-plussucc:p:1)%	%priority(1)%	 %%id:5	eqClass: 5
+	forall x : Nat . sum(x) = qsum(x, zero)	%(Ax-targetTheoremNat:p:3)%	%priority(3)%	 %%id:6	eqClass: 6
+	forall x, y : Nat . plus(sum(x), y) = qsum(x, y)	%(Ax-heurekaLemmaNat:p:3)%	%priority(3)%	 %%id:7	eqClass: 7
+end
+
+%% Spec values: 
+%% Information value: 33
+%% Compression value: 6
+spec Nat_gen_1 = %% InfoValue: 33 -- CompressionValue: 6
+	 sort Nat	%%prio:3
+	 sort El	%%prio:3
+	 op c : El	%%prio:1
+	 op plus : Nat * Nat -> Nat	%%prio:1
+	 op qsum : Nat * Nat -> Nat	%%prio:2
+	 op s : El * Nat -> Nat	%%prio:3
+	 op sum : Nat -> Nat	%%prio:2
+	 op zero : Nat	%%prio:2
+
+	. sum(zero) = zero	%(Ax-sumzerozero:p:2)%	%priority(2)%	 %%id:0	eqClass: 0
+	forall x : Nat . sum(s(c, x)) = plus(s(c, x), sum(x))	%(Ax-sumsucc:p:2)%	%priority(2)%	 %%id:1	eqClass: 1
+	forall x, y : Nat . qsum(s(c, x), y) = qsum(x, plus(s(c, x), y))	%(Ax-qsumplus:p:2)%	%priority(2)%	 %%id:2	eqClass: 2
+	forall x : Nat . qsum(zero, x) = x	%(Ax-qsumzero:p:2)%	%priority(2)%	 %%id:3	eqClass: 3
+	forall x : Nat . plus(zero, x) = x	%(Ax-pluszero:p:1)%	%priority(1)%	 %%id:4	eqClass: 4
+	forall x, y : Nat . plus(s(c, x), y) = s(c, plus(x, y))	%(Ax-plussucc:p:1)%	%priority(1)%	 %%id:5	eqClass: 5
+	forall x : Nat . sum(x) = qsum(x, zero)	%(Ax-targetTheoremNat:p:3)%	%priority(3)%	 %%id:6	eqClass: 6
+	forall x, y : Nat . plus(sum(x), y) = qsum(x, y)	%(Ax-heurekaLemmaNat:p:3)%	%priority(3)%	 %%id:7	eqClass: 7
+end
+
+view Nat_gen_1ToNat : Nat_gen_1 to Nat =  El |-> Element end 
+
+%% Spec values: 
+%% Information value: 33
+%% Compression value: 12
+spec Nat_gen_2 = %% InfoValue: 33 -- CompressionValue: 12
+	 sort El	%%prio:3
+	 sort L	%%prio:3
+	 op c : El	%%prio:1
+	 op plus : L * L -> L	%%prio:1
+	 op qsum : L * L -> L	%%prio:2
+	 op s : El * L -> L	%%prio:3
+	 op sum : L -> L	%%prio:2
+	 op zero : L	%%prio:2
+
+	. sum(zero) = zero	%(Ax-sumzerozero:p:2)%	%priority(2)%	 %%id:0	eqClass: 0
+	forall x : L . sum(s(c, x)) = plus(s(c, x), sum(x))	%(Ax-sumsucc:p:2)%	%priority(2)%	 %%id:1	eqClass: 1
+	forall x, y : L . qsum(s(c, x), y) = qsum(x, plus(s(c, x), y))	%(Ax-qsumplus:p:2)%	%priority(2)%	 %%id:2	eqClass: 2
+	forall x : L . qsum(zero, x) = x	%(Ax-qsumzero:p:2)%	%priority(2)%	 %%id:3	eqClass: 3
+	forall x : L . plus(zero, x) = x	%(Ax-pluszero:p:1)%	%priority(1)%	 %%id:4	eqClass: 4
+	forall x, y : L . plus(s(c, x), y) = s(c, plus(x, y))	%(Ax-plussucc:p:1)%	%priority(1)%	 %%id:5	eqClass: 5
+	forall x : L . sum(x) = qsum(x, zero)	%(Ax-targetTheoremNat:p:3)%	%priority(3)%	 %%id:6	eqClass: 6
+	forall x, y : L . plus(sum(x), y) = qsum(x, y)	%(Ax-heurekaLemmaNat:p:3)%	%priority(3)%	 %%id:7	eqClass: 7
+end
+
+view Nat_gen_2ToNat_gen_1 : Nat_gen_2 to Nat_gen_1 =  L |-> Nat end 
+
+%% Spec values: 
+%% Information value: 33
+%% Compression value: 18
+spec Nat_gen_3 = %% InfoValue: 33 -- CompressionValue: 18
+	 sort El	%%prio:3
+	 sort L	%%prio:3
+	 op c : El	%%prio:1
+	 op plus : L * L -> L	%%prio:1
+	 op qsum : L * L -> L	%%prio:2
+	 op sum : L -> L	%%prio:2
+	 op zero : L	%%prio:2
+	 op cons : El * L -> L	%%prio:3
+
+	. sum(zero) = zero	%(Ax-sumzerozero:p:2)%	%priority(2)%	 %%id:0	eqClass: 0
+	forall x : L . sum(cons(c, x)) = plus(cons(c, x), sum(x))	%(Ax-sumsucc:p:2)%	%priority(2)%	 %%id:1	eqClass: 1
+	forall x, y : L . qsum(cons(c, x), y) = qsum(x, plus(cons(c, x), y))	%(Ax-qsumplus:p:2)%	%priority(2)%	 %%id:2	eqClass: 2
+	forall x : L . qsum(zero, x) = x	%(Ax-qsumzero:p:2)%	%priority(2)%	 %%id:3	eqClass: 3
+	forall x : L . plus(zero, x) = x	%(Ax-pluszero:p:1)%	%priority(1)%	 %%id:4	eqClass: 4
+	forall x, y : L . plus(cons(c, x), y) = cons(c, plus(x, y))	%(Ax-plussucc:p:1)%	%priority(1)%	 %%id:5	eqClass: 5
+	forall x : L . sum(x) = qsum(x, zero)	%(Ax-targetTheoremNat:p:3)%	%priority(3)%	 %%id:6	eqClass: 6
+	forall x, y : L . plus(sum(x), y) = qsum(x, y)	%(Ax-heurekaLemmaNat:p:3)%	%priority(3)%	 %%id:7	eqClass: 7
+end
+
+view Nat_gen_3ToNat_gen_2 : Nat_gen_3 to Nat_gen_2 =  cons |-> s end 
+
+%% Spec values: 
+%% Information value: 33
+%% Compression value: 22
+spec Nat_gen_4 = %% InfoValue: 33 -- CompressionValue: 22
+	 sort El	%%prio:3
+	 sort L	%%prio:3
+	 op c : El	%%prio:1
+	 op plus : L * L -> L	%%prio:1
+	 op qsum : L * L -> L	%%prio:2
+	 op zero : L	%%prio:2
+	 op cons : El * L -> L	%%prio:3
+	 op rev : L -> L	%%prio:2
+
+	. rev(zero) = zero	%(Ax-sumzerozero:p:2)%	%priority(2)%	 %%id:0	eqClass: 0
+	forall x : L . rev(cons(c, x)) = plus(cons(c, x), rev(x))	%(Ax-sumsucc:p:2)%	%priority(2)%	 %%id:1	eqClass: 1
+	forall x, y : L . qsum(cons(c, x), y) = qsum(x, plus(cons(c, x), y))	%(Ax-qsumplus:p:2)%	%priority(2)%	 %%id:2	eqClass: 2
+	forall x : L . qsum(zero, x) = x	%(Ax-qsumzero:p:2)%	%priority(2)%	 %%id:3	eqClass: 3
+	forall x : L . plus(zero, x) = x	%(Ax-pluszero:p:1)%	%priority(1)%	 %%id:4	eqClass: 4
+	forall x, y : L . plus(cons(c, x), y) = cons(c, plus(x, y))	%(Ax-plussucc:p:1)%	%priority(1)%	 %%id:5	eqClass: 5
+	forall x : L . rev(x) = qsum(x, zero)	%(Ax-targetTheoremNat:p:3)%	%priority(3)%	 %%id:6	eqClass: 6
+	forall x, y : L . plus(rev(x), y) = qsum(x, y)	%(Ax-heurekaLemmaNat:p:3)%	%priority(3)%	 %%id:7	eqClass: 7
+end
+
+view Nat_gen_4ToNat_gen_3 : Nat_gen_4 to Nat_gen_3 =  rev |-> sum end 
+
+%% Spec values: 
+%% Information value: 33
+%% Compression value: 26
+spec Nat_gen_5 = %% InfoValue: 33 -- CompressionValue: 26
+	 sort El	%%prio:3
+	 sort L	%%prio:3
+	 op c : El	%%prio:1
+	 op plus : L * L -> L	%%prio:1
+	 op qsum : L * L -> L	%%prio:2
+	 op cons : El * L -> L	%%prio:3
+	 op rev : L -> L	%%prio:2
+	 op nil : L	%%prio:2
+
+	. rev(nil) = nil	%(Ax-sumzerozero:p:2)%	%priority(2)%	 %%id:0	eqClass: 0
+	forall x : L . rev(cons(c, x)) = plus(cons(c, x), rev(x))	%(Ax-sumsucc:p:2)%	%priority(2)%	 %%id:1	eqClass: 1
+	forall x, y : L . qsum(cons(c, x), y) = qsum(x, plus(cons(c, x), y))	%(Ax-qsumplus:p:2)%	%priority(2)%	 %%id:2	eqClass: 2
+	forall x : L . qsum(nil, x) = x	%(Ax-qsumzero:p:2)%	%priority(2)%	 %%id:3	eqClass: 3
+	forall x : L . plus(nil, x) = x	%(Ax-pluszero:p:1)%	%priority(1)%	 %%id:4	eqClass: 4
+	forall x, y : L . plus(cons(c, x), y) = cons(c, plus(x, y))	%(Ax-plussucc:p:1)%	%priority(1)%	 %%id:5	eqClass: 5
+	forall x : L . rev(x) = qsum(x, nil)	%(Ax-targetTheoremNat:p:3)%	%priority(3)%	 %%id:6	eqClass: 6
+	forall x, y : L . plus(rev(x), y) = qsum(x, y)	%(Ax-heurekaLemmaNat:p:3)%	%priority(3)%	 %%id:7	eqClass: 7
+end
+
+view Nat_gen_5ToNat_gen_4 : Nat_gen_5 to Nat_gen_4 =  nil |-> zero end 
+
+%% Spec values: 
+%% Information value: 33
+%% Compression value: 30
+spec Nat_gen_6 = %% InfoValue: 33 -- CompressionValue: 30
+	 sort El	%%prio:3
+	 sort L	%%prio:3
+	 op c : El	%%prio:1
+	 op plus : L * L -> L	%%prio:1
+	 op cons : El * L -> L	%%prio:3
+	 op rev : L -> L	%%prio:2
+	 op nil : L	%%prio:2
+	 op qrev : L * L -> L	%%prio:2
+
+	. rev(nil) = nil	%(Ax-sumzerozero:p:2)%	%priority(2)%	 %%id:0	eqClass: 0
+	forall x : L . rev(cons(c, x)) = plus(cons(c, x), rev(x))	%(Ax-sumsucc:p:2)%	%priority(2)%	 %%id:1	eqClass: 1
+	forall x, y : L . qrev(cons(c, x), y) = qrev(x, plus(cons(c, x), y))	%(Ax-qsumplus:p:2)%	%priority(2)%	 %%id:2	eqClass: 2
+	forall x : L . qrev(nil, x) = x	%(Ax-qsumzero:p:2)%	%priority(2)%	 %%id:3	eqClass: 3
+	forall x : L . plus(nil, x) = x	%(Ax-pluszero:p:1)%	%priority(1)%	 %%id:4	eqClass: 4
+	forall x, y : L . plus(cons(c, x), y) = cons(c, plus(x, y))	%(Ax-plussucc:p:1)%	%priority(1)%	 %%id:5	eqClass: 5
+	forall x : L . rev(x) = qrev(x, nil)	%(Ax-targetTheoremNat:p:3)%	%priority(3)%	 %%id:6	eqClass: 6
+	forall x, y : L . plus(rev(x), y) = qrev(x, y)	%(Ax-heurekaLemmaNat:p:3)%	%priority(3)%	 %%id:7	eqClass: 7
+end
+
+view Nat_gen_6ToNat_gen_5 : Nat_gen_6 to Nat_gen_5 =  qrev |-> qsum end 
+
+%% Spec values: 
+%% Information value: 33
+%% Compression value: 33
+spec Nat_gen_7 = %% InfoValue: 33 -- CompressionValue: 33
+	 sort El	%%prio:3
+	 sort L	%%prio:3
+	 op c : El	%%prio:1
+	 op cons : El * L -> L	%%prio:3
+	 op rev : L -> L	%%prio:2
+	 op nil : L	%%prio:2
+	 op qrev : L * L -> L	%%prio:2
+	 op app : L * L -> L	%%prio:1
+
+	. rev(nil) = nil	%(Ax-sumzerozero:p:2)%	%priority(2)%	 %%id:0	eqClass: 0
+	forall x : L . rev(cons(c, x)) = app(cons(c, x), rev(x))	%(Ax-sumsucc:p:2)%	%priority(2)%	 %%id:1	eqClass: 1
+	forall x, y : L . qrev(cons(c, x), y) = qrev(x, app(cons(c, x), y))	%(Ax-qsumplus:p:2)%	%priority(2)%	 %%id:2	eqClass: 2
+	forall x : L . qrev(nil, x) = x	%(Ax-qsumzero:p:2)%	%priority(2)%	 %%id:3	eqClass: 3
+	forall x : L . app(nil, x) = x	%(Ax-pluszero:p:1)%	%priority(1)%	 %%id:4	eqClass: 4
+	forall x, y : L . app(cons(c, x), y) = cons(c, app(x, y))	%(Ax-plussucc:p:1)%	%priority(1)%	 %%id:5	eqClass: 5
+	forall x : L . rev(x) = qrev(x, nil)	%(Ax-targetTheoremNat:p:3)%	%priority(3)%	 %%id:6	eqClass: 6
+	forall x, y : L . app(rev(x), y) = qrev(x, y)	%(Ax-heurekaLemmaNat:p:3)%	%priority(3)%	 %%id:7	eqClass: 7
+end
+
+view Nat_gen_7ToNat_gen_6 : Nat_gen_7 to Nat_gen_6 =  app |-> plus end 
+
+view GenToNat_gen_7 : Generic to Nat_gen_7 end 
+
+spec Blend = combine GenToList,GenToNat_gen_7 end
+
+
+
+
+spec BlendExplicit = 
+sorts El, L
+op app : L * L -> L
+op c : El
+op cons : El * L -> L
+op nil : L
+op qrev : L * L -> L
+op rev : L -> L
+
+. rev(nil) = nil %(Ax-revnilnil:p:2)%
+
+forall x : L; h : El . rev(cons(h, x)) = app(rev(x), cons(h, nil))
+                                                %(Ax-revcons:p:2)%
+
+forall x : L . qrev(nil, x) = x %(Ax-qrevnilxx:p:2)%
+
+forall x, y : L; h : El . qrev(cons(h, x), y) = qrev(x, cons(h, y))
+                                               %(Ax-qrevCons:p:2)%
+
+forall x : L . app(nil, x) = x %(Ax-appNilIsId:p:1)%
+
+forall x, y : L; h : El . app(cons(h, x), y) = cons(h, app(x, y))
+                                                %(Ax-appCons:p:1)%
+
+forall x : L . rev(x) = qrev(x, nil) %(Ax-targetTheoremLists:p:3)%
+
+forall x : L . rev(cons(c, x)) = app(cons(c, x), rev(x))
+                                                %(Ax-sumsucc:p:2)%
+
+forall x, y : L . qrev(cons(c, x), y) = qrev(x, app(cons(c, x), y))
+                                               %(Ax-qsumplus:p:2)%
+
+forall x, y : L . app(cons(c, x), y) = cons(c, app(x, y))
+                                               %(Ax-plussucc:p:1)%
+
+forall x, y : L . app(rev(x), y) = qrev(x, y)
+                                        %(Ax-heurekaLemmaNat:p:3)%
+
+ end

@@ -1,4 +1,10 @@
-%% This gives 24 stable models with 0 non-optimal steps
+%% COINVENT blend fusion example
+%% =================================
+%% ### Authors:
+%% - Manfred Eppe (meppe@iiia.csic.es)
+%% - Ewen MacLean (ewenmaclean@gmail.com)
+%% - Roberto Confalonieri (confalonieri@iiia.csic.es)
+%% This is an improved example, originally from the IJCAI 2015 paper where we blend the Perfect cadence with the Phrygian cadence to obtain the Backdoor cadence. What I want to demonstrate is how the first chord of the perfect gets mapped to the first chord of the phrygian. This exploits the renaming operations and is a much more general method for blending cadences. 
 
 spec SemSys = 
   sort PriorityDummySort
@@ -178,98 +184,3 @@ end
 %%   x1  
 %%   1   
 %%   5   
-
-
-
-
-%% The generic space for the fusion is a progression with two successive chords, where the first one is undefined
-spec GenericFusion = Progression then     
-    C with c |-> c2Generic then 
-
-    ops 
-    c1Generic : Chord
-    
-    %% Here may be some more axioms for common notes in fist chords.
-    
-    . hasSucc(c1Generic,c2Generic)
-    . isInitialChord(c1Generic)
-    . isTerminalChord(c2Generic)
-end
-
-view GenericFusionToPhrygian : GenericFusion to PhrygianCadence =  c1Generic |-> c1Phrygian, c2Generic |-> c2Phrygian end 
-view GenericFusionToPerfect : GenericFusion to PerfectCadence =  c1Generic |-> c1Perfect, c2Generic |-> c2Perfect end 
-
-%% The backdoor cadence is a possible blend. 
-spec BlendFusion = Progression then 
-    C with c |-> c2Blend then 
-    ops 
-    c1Blend: Chord
-
-    . hasAbsNote(c1Blend,x)
-    . hasAbsNote(c1Blend,2)
-    . hasAbsNote(c1Blend,5) 
-    . hasAbsNote(c1Blend,8) 
-    . root(c1Blend) = x
-    . hasRelNote(c1Blend,0)
-    . hasRelNote(c1Blend,4)
-    . hasRelNote(c1Blend,7) 
-    . hasRelNote(c1Blend,x)
-
-    . isInitialChord(c1Blend)
-    . isTerminalChord(c2Blend)
-    . hasSucc(c1Blend,c2Blend) 
-end
-
-
-spec GenericCrossfade = Progression then 
-    ops 
-        cMiddle : Chord
-end
-
-%% How to get to the GenericCrossfade from PerfectCadence (the 2nd cadence in the tierce de picardie):
-%% remove all axioms that define c2
-%% remove c2
-%% remove axioms that would create an inconsistency when blending the G7 and C chords. 
-
-%% How to get to the GenericCrossfade from PhrygianCadence (the 1st cadence in the tierce de picardie):
-%% remove all axioms that define c1
-%% remove c1
-%% remove axioms that would create an inconsistency when blending the G7 and C chords. 
-
-view GenericCrossfadeToPerfect : GenericCrossfade to PerfectCadence = cMiddle |-> c2Perfect end 
-view GenericCrossfadeToPhrygian : GenericCrossfade to PhrygianCadence = cMiddle |-> c1Phrygian end 
-
-%% The generalised Phrygian is obtained by 
-%% 1. Remove axiom that states that c2 is terminal 
-%% 2. Remove axoims about relative and absolute notes that cause inconsistencies. 
-%% The generalised Perfect is obtained by 
-%% 1. Remove axiom that states that c1 is initial
-%% 2. Remove axioms about relative and absolute notes that cause inconsistencies. 
-
-spec BlendCrossfade = Progression then 
-    Bbmin with c |-> c1Blend then 
-    C with c |-> c3Blend then 
-    ops 
-    cMiddle : Chord
-
-    . hasAbsNote(cMiddle,0)
-    . hasAbsNote(cMiddle,4)
-    . hasAbsNote(cMiddle,7) 
-    . hasAbsNote(cMiddle,x) 
-    . root(cMiddle) = 0
-    . hasRelNote(cMiddle,0)
-    . hasRelNote(cMiddle,4)
-    . hasRelNote(cMiddle,7) 
-    . hasRelNote(cMiddle,x)
-
-
-    . hasSucc(c1Blend,cMiddle) %% This comes from Phrygian Cadence specification
-    . hasSucc(cMiddle,c3Blend) %% This comes from Perfect Cadence specification
-    . isInitialChord(c1Blend)  %% This comes from Phrygian Cadence specification
-    . isTerminalChord(c3Blend) %% This comes from Perfect Cadence specification
-end
-
-
-
-
-

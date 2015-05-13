@@ -18,33 +18,39 @@ maxIterationsGeneralize = 20
 blendValuePercentageBelowHighestValueToKeep = 0
 
 ###### Time limit for eprover and darwin consistency check in seconds CPU time
-eproverTimeLimit = 4
+eproverTimeLimit = 5
 darwinTimeLimit = 0.1
 
 ###### Path to the HETS executable ######
 hetsExe = 'hets'
 
 ###### Switch to enable the explicit generation of blend files (see function writeBlends.py) ######
-genExplicitBlendFiles = True
+genExplicitBlendFiles = False
 
-
+###### Switch to enable pause after generalisation phase. Useful for demos
+pauseAfterGenPhase = True
 
 
 ###################################################################
 
 ## Here is space to quickly overwrite the above settings for debugging purposes.
 
-# inputFile = "examples/LPNMR/houseBoat.casl"
-# inputSpaceNames = ["Boat","House"]
+# inputFile = "examples/music/tritone_demo.casl"
+# inputSpaceNames = ["G7","Bbmin"]
 
-# inputFile = "examples/LPNMR/cadenceBlendFusionTest.casl"
+# inputFile = "examples/music/cadenceBlendFusionBackdoor.casl"
 # inputSpaceNames = ["PhrygianCadence","PerfectCadence"]
 
-# inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
-# inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
+# inputFile = "examples/maths/naturalsAndLists_sum.casl"
 # inputSpaceNames = ["Nat","List"]
 
-inputFile = "examples/music_IJCAI/music_blend.casl"
-inputSpaceNames = ["Emaj7","Fmin7"]
+inputFile = "examples/maths/naturalsAndLists_sum_minimal.casl"
+inputSpaceNames = ["Nat","List"]
+
+# inputFile = "examples/maths/naturalsAndLists_fact.casl"
+# inputSpaceNames = ["Nat","List"]
+
+# inputFile = "examples/music/allthethings_demo.casl"
+# inputSpaceNames = ["Emaj7","Fmin7"]
 
 

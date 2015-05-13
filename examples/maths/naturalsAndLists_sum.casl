@@ -1,0 +1,69 @@
+%% COINVENT naturals and lists example
+%% =================================
+%% ### Authors:
+%% - Ewen MacLean (ewenmaclean@gmail.com)
+%% - Manfred Eppe (meppe@iiia.csic.es)
+%% - Roberto Confalonieri (confalonieri@iiia.csic.es)
+%% This is the naturals and lists example where the eureka lemma for lists is build with the sum and qsum from the naturals. See LPNMR 2015 paper for details
+
+spec SemSys = 
+  sort PriorityDummySort
+  op prioDummyOp : PriorityDummySort
+end
+
+spec Nat = SemSys then
+   sort Element
+   sort Nat   
+   op zero:Nat                    %% maps to nil  / null
+   op c: Element                  %% the canonical element
+   op s: Element * Nat -> Nat     %% maps to cons / constructor
+   op sum : Nat -> Nat            %% maps to rev  / recfunc
+   op qsum: Nat * Nat -> Nat      %% maps to qrev  / qrecfunc
+   op plus : Nat * Nat -> Nat     %% maps to app  / auxfunc
+   
+   forall x,y:Nat
+       %% These axioms have a similar (but not necessarily equivalent) analogous partner axiom in spec List
+       . sum(zero) = zero                          %(Ax-sumzerozero:p:2)%                             
+       . sum(s(c,x)) = plus(sum(x),s(c,x))         %(Ax-sumsucc:p:2)%
+       . qsum(s(c,x),y) = qsum(x,plus(s(c,x),y))   %(Ax-qsumplus:p:2)%
+       . qsum(zero,x) = x                          %(Ax-qsumzero:p:2)%
+       . plus(zero,x) = x                          %(Ax-pluszero:p:1)%
+       . plus(s(c,x),y) = s(c,plus(x,y))           %(Ax-plussucc:p:1)%
+       %% . not s(c,x) = zero                         %(Ax-notSucZero:p:1)% %% This axiom is optional
+
+       %% These are the theormes of interest
+       . sum(x) = qsum(x,zero)                     %(Ax-targetTheoremNat:p:3)% %% This is the target theorem that we know is correct for naturals and that we want  to obtain by blending for lists.
+       . plus(sum(x),y) = qsum(x,y)                %(Ax-heurekaLemmaNat:p:3)% %% This is the Eureka lemma that we know is correct for naturals and that we want  to obtain by blending for lists.
+
+    %% This is our dummy lemma to set priorities of operators, predicats and sorts
+    . prioDummyOp = prioDummyOp %(Element:p:3--Nat:p:3--zero:p:2--s:p:3--sum:p:2--qsum:p:2--plus:p:1--c:p:1)%
+end
+
+
+
+%%% 
+spec List = SemSys then
+  sort El
+  sort L
+     op nil : L                 %% maps to zero   / null
+     op cons : El*L -> L        %% maps to s      / constructor
+     op app : L * L -> L        %% maps to times  / auxfunc
+     op rev : L -> L            %% maps to fact   / recfunc
+     op qrev : L * L -> L       %% maps to qfact  / qrecfunc
+     forall x,y: L, h : El
+       . rev(nil) = nil                             %(Ax-revnilnil:p:2)% 
+       . rev(cons(h,x)) = app(rev(x),cons(h,nil))   %(Ax-revcons:p:2)%      
+       . qrev(nil,x) = x                            %(Ax-qrevnilxx:p:2)%
+       . qrev(cons(h,x),y) = qrev(x,cons(h,y))      %(Ax-qrevCons:p:2)%
+       . app(nil,x) = x                             %(Ax-appNilIsId:p:1)%       
+       . app(cons(h,x),y) = cons(h,app(x,y))        %(Ax-appCons:p:1)%   
+       %% . not cons(h,x) = nil                        %(Ax-notConsZero:p:1)%    %% This axiom is optional
+
+       %% These are the theormes of interest
+       . rev(x) = qrev(x,nil)                       %(Ax-targetTheoremLists:p:3)% %% This is the target theorem of that we know it's correct for naturals, and that we want to "translate" to the theory of lists.
+       %% . app(rev(x),y) = qrev(x,y) %(Ax-heurekaLemmaLists:p:3)% %% This is the eureka lemma that we want to have for lists.
+       
+       %% This is our dummy lemma to set priorities of operators, predicats and sorts
+     . prioDummyOp = prioDummyOp %(El:p:3--L:p:3--nil:p:2--cons:p:3--app:p:2--rev:p:2--qrev:p:2)%
+end
+
