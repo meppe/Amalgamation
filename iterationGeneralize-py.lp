@@ -6,6 +6,7 @@
 # First we need to etermine the path we are in.
 # Some auxiliary libraries that we need:
 import os, sys, time, subprocess
+from termios import tcflush, TCIOFLUSH
 
 # Set path for additional import files
 lp_path = os.path.abspath(os.getcwd())
@@ -60,8 +61,9 @@ def onModelGeneralize(model):
             outFile.write(json.dumps(blendJson))
             #print blendJson
             outFile.close()
+            tcflush(sys.stdin, TCIOFLUSH)
             x = raw_input('Other blend? (n) ')
-            sys.stdout.flush()
+            #sys.stdout.flush()
             if x == 'n':
                break;
         print 'finished'
