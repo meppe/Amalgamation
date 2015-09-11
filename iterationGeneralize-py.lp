@@ -22,7 +22,7 @@ from langCasl import *
 from blendFunctions import *
 from auxFunctions import *
 
-print "starting generalisation"
+# print "starting generalisation"
 
 # Global variable required for the blending: the input spaces in the internal data structure represenation. 
 inputSpaces = []
@@ -40,7 +40,7 @@ def onModelGeneralize(model):
 
     print "Found generalisation:"
     modelStr = getModel(model)
-    print modelStr
+    ## print modelStr
     # return
     [blends,blendingGeneralizationValue] = findLeastGeneralizedBlends(model.atoms(), inputSpaces, highestValue, blends) 
     # print blendingGeneralizationValue  
@@ -62,8 +62,10 @@ def onModelGeneralize(model):
             #print blendJson
             outFile.close()
             tcflush(sys.stdin, TCIOFLUSH)
-            x = raw_input('Other blend? (n) ')
-            #sys.stdout.flush()
+            print 'Other blend? (n) '
+            sys.stdout.flush()
+            x = raw_input()
+            
             if x == 'n':
                break;
         print 'finished'
