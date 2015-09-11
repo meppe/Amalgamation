@@ -45,8 +45,26 @@ def onModelGeneralize(model):
     # print blendingGeneralizationValue  
     if blendingGeneralizationValue >= highestValue and blendingGeneralizationValue > -sys.maxint:
         highestValue = blendingGeneralizationValue
-        writeBlends(blends)
-        print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
+
+        #writeBlends(blends)
+        jsonOutput = writeJsonOutput(blends,inputSpaceNames)
+
+        #print jsonOutput
+
+        blendJsonList = jsonOutput['blendList']
+       
+        for blendJson in blendJsonList:
+
+            os.system("rm blend.json")
+            outFile = open('blend.json',"w")
+            outFile.write(json.dumps(blendJson))
+            #print blendJson
+            outFile.close()
+            x = raw_input('Other blend? (n) ')
+            if x == 'n':
+               break;
+        print 'finished'
+        #print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
         # raw_input()
 
 def getModel(model):

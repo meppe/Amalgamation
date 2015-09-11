@@ -8,6 +8,7 @@ import re
 from settings import *
 
 from auxFunctions import *
+import requests
 
 # from FOL import *
 
@@ -28,6 +29,7 @@ def input2Xml(fName,inputSpaces):
     tries = 0
     while True:
         print "Generating Casl .th files using HETS from " + fName
+        ##TBD: call HETS axInvolvesPredOp
         subprocess.call([hetsExe, "-o th", fName])
         print "Done generating casl .th files using HETS"        
         # raw_input()
@@ -49,6 +51,7 @@ def input2Xml(fName,inputSpaces):
             exit(1)                
         tries = tries + 1
 
+       
     # Second read the input spaces to be blended in CASL syntax from .th files and concatenate the strings. 
     newFileContent = ""
     for spec in inputSpaces:
@@ -87,14 +90,20 @@ def input2Xml(fName,inputSpaces):
                 print "xml parse error, trying again..."
         
         if tries > 5:
-            print "ERROR: File " + xmlFileName + " not yet written correctly after " + str(tries) + " tries! Aboting... :::::::"
+            print "ERROR: File " + xmlFileName + " not yet written correctly after " + str(tries) + " tries! Aborting... :::::::"
             exit(1)
         tries = tries + 1
         print "Calling hets to generate xml file for parsing"
-        subprocess.call([hetsExe, "-o xml", newFileName])        
+        ### TBD call hets
+        if useHetsAPI == 0:
+            subprocess.call([hetsExe, "-o xml", newFileName])
+        else:
+            subprocess.call(["wget", hetsUrl+'dg/demo_examples%2ftritone_demo.casl?format=xml&node=G7&node=Bbmin', "-O", xmlFileName]) 
+        #wget http://localhost:8000/demo_examples%2ftritone_demo.casl?format=xml -O test.xml       
         print "Done calling hets to generate xml"
-
-    os.remove(newFileName)
+    
+      
+    #os.remove(newFileName)
     return xmlFileName
 
 ## This class represents a predicate in CASL. 
@@ -432,6 +441,7 @@ def parseXml(xmlFile):
     dataSorts = {}
     opAndSortPriorities = {}
     for dgNode in dGraph:
+
         if 'refname' not in dgNode.attrib.keys():
             continue
         specName = dgNode.attrib['refname']
