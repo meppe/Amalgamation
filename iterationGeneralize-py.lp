@@ -61,7 +61,7 @@ def onModelGeneralize(model):
             outFile.write(json.dumps(blendJson))
             #print blendJson
             outFile.close()
-            tcflush(sys.stdin, TCIOFLUSH)
+            
             print 'Other blend? (n) '
             sys.stdout.flush()
             x = raw_input()
