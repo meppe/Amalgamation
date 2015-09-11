@@ -7,6 +7,7 @@
 # Some auxiliary libraries that we need:
 import os, sys, time, subprocess
 
+
 # Set path for additional import files
 lp_path = os.path.abspath(os.getcwd())
 sys.path.append(lp_path)
@@ -21,7 +22,7 @@ from langCasl import *
 from blendFunctions import *
 from auxFunctions import *
 
-print "starting generalisation"
+# print "starting generalisation"
 
 # Global variable required for the blending: the input spaces in the internal data structure represenation. 
 inputSpaces = []
@@ -39,14 +40,37 @@ def onModelGeneralize(model):
 
     print "Found generalisation:"
     modelStr = getModel(model)
-    print modelStr
+    ## print modelStr
     # return
     [blends,blendingGeneralizationValue] = findLeastGeneralizedBlends(model.atoms(), inputSpaces, highestValue, blends) 
     # print blendingGeneralizationValue  
     if blendingGeneralizationValue >= highestValue and blendingGeneralizationValue > -sys.maxint:
         highestValue = blendingGeneralizationValue
-        writeBlends(blends)
-        print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
+
+        #writeBlends(blends)
+        jsonOutput = writeJsonOutput(blends,inputSpaceNames)
+
+        #print jsonOutput
+
+        blendJsonList = jsonOutput['blendList']
+       
+        for blendJson in blendJsonList:
+
+            os.system("rm blend.json")
+            outFile = open('blend.json',"w")
+            outFile.write(json.dumps(blendJson))
+            #print blendJson
+            outFile.close()
+            
+            print 'Other blend? (n) '
+            sys.stdout.flush()
+            x = raw_input()
+            
+            if x == 'n':
+               break;
+        print 'finished'
+        sys.stdout.flush()
+        #print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
         # raw_input()
 
 def getModel(model):

@@ -3,6 +3,7 @@ import os, sys, time, subprocess, threading, shlex
 from settings import *
 from langCasl import *
 from itertools import *
+import json
 
 
 def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
@@ -138,6 +139,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                     break
                 
                 print "generating tptp because " + blendTptpName + " file was not found"
+                ###TBD call HETS API
                 subprocess.call([hetsExe, "-o tptp", "amalgamTmp.casl"])
                 print "Done generating tptp"
                 # This is a hack because hets sometimes seems to not generate all .tptp files. So we just try again and again until its working. 
@@ -155,6 +157,8 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                 prettyBlendStr = prettyPrintBlend(genInputSpaces,combi,modelAtoms)
                 blendInfo = {"combi" : combi, "prettyHetsStr" : prettyBlendStr, "blendName" : blendName, "generalizationValue" : value}
                 
+                
+
                 # consistentFound = True
                 # If a better blend was found, delete all previous blends. 
                 if value > highestValue:
@@ -186,7 +190,7 @@ def prettyPrintBlend(genInputSpaces,combi,modelAtoms):
 
     # state generic space
     cstr = genInputSpaces["Generic"][0].toCaslStr()+"\n\n"
-    
+
     # initiate blend spec string
     blendStr =  "spec Blend = combine "
     for iSpaceName in genInputSpaces.keys():
@@ -195,11 +199,13 @@ def prettyPrintBlend(genInputSpaces,combi,modelAtoms):
         lastSpecName = ''
         lastSpec = None
         numGeneralizations = 0
+        
         for spec in genInputSpaces[iSpaceName]:
             cstr += "%% Spec values: \n%% Information value: "
             cstr += str(spec.infoValue)
             cstr += "\n%% Compression value: "
             cstr += str(spec.compressionValue) + "\n"
+            
             cstr += spec.toCaslStr()+"\n\n"
             # define view to previous spec. 
             viewToPrevSpecStr = ''
@@ -235,6 +241,7 @@ def prettyPrintBlend(genInputSpaces,combi,modelAtoms):
                 blendStr = blendStr + "GenTo"+spec.name+","
                 break
             numGeneralizations = numGeneralizations + 1
+            
         
     blendStr = blendStr[:-1] + " end\n\n"
 
@@ -243,6 +250,115 @@ def prettyPrintBlend(genInputSpaces,combi,modelAtoms):
     print "End Pretty printing blend"
 
     return cstr
+
+def writeJsonOutput(blends,inputSpaceNames):
+
+    jsonOutput = {}
+    jsonOutput['blendList'] = []
+    
+    
+    print inputSpaceNames
+    blendNr = 1
+    for blend in blends:
+        jsonBlend = {}
+        
+        blendStr = blend['prettyHetsStr']
+        print 'Blend'+str(blendNr)
+               
+        genericSpacePattern = "(spec\sGeneric.*?end)"
+        jsonBlend['blendId'] = str(blendNr)
+        jsonBlend['blendName'] = blend['blendName']
+        jsonBlend['cost'] = blend['generalizationValue']
+        match = re.search(genericSpacePattern,blendStr,re.DOTALL)
+        jsonBlend['genericSpace'] = match.group(0)
+        
+        #'combi': {'spec_G7': 1, 'spec_Bbmin': 3}
+        #G7_gen_1 
+        combi = blend['combi']
+        #['G7', 'Bbmin']
+        inputSpaceNr = 1
+        for inputSpaceName in inputSpaceNames:
+            inputSpace = inputSpaceName
+            genSpaceName= '_'+'gen'+'_'+str(combi[toLPName(inputSpace,'spec')])
+            print 'TETEET:' + genSpaceName
+            genericSpacePattern = "(spec\s"+inputSpace+"(?=)"+genSpaceName+".*?end)"
+            match = re.search(genericSpacePattern,blendStr,re.DOTALL)
+            jsonBlend['input'+str(inputSpaceNr)] = match.group(0)
+
+            inputSpaceNr = inputSpaceNr +1
+            
+        
+        jsonBlend['blend'] = generateBlend(blend)
+        jsonOutput['blendList'].append(jsonBlend)
+        blendNr = blendNr +1
+   
+    return jsonOutput
+    #print json
+    #sys.exit()
+
+# This function takes a list of blend speciications and writes them to disk.
+def generateBlend(blend):
+
+    os.system("rm Blend_*.casl")
+    os.system("rm Blend_*.th")
+    bNum = 0
+    blendFilesList = ''
+    
+    blendStr = blend["prettyHetsStr"]
+    fName = blend["blendName"] + "_b_"+str(bNum)+".casl"
+    outFile = open(fName,"w")
+    outFile.write(blendStr)
+    outFile.close()
+    tries = 0
+    while True:
+        ### call HETS API
+        subprocess.call([hetsExe, "-o th", fName])
+        thName = fName[:-5]+"_Blend.th"
+        thFileSize = 0
+        if os.path.isfile(thName):
+            thFileSize = os.stat(thName).st_size
+
+        if tries > 15:
+            print "ERROR: file " + thName + " not yet written in " + str(tries) + " times ! Aborting..."
+            exit(1)                
+        tries = tries + 1            
+
+        if thFileSize != 0:
+            break
+
+    bFile = open(thName,"r")
+    explicitBlendStr = bFile.read()
+    bFile.close()
+    # remove first two lines and rename explicit blend spec
+    lineBreakPos = explicitBlendStr.find("\n")
+    explicitBlendStr = explicitBlendStr[lineBreakPos+1:]
+    lineBreakPos = explicitBlendStr.find("\n")
+    explicitBlendStr = explicitBlendStr[lineBreakPos+1:]
+    explicitBlendStr = "\n\n\nspec BlendExplicit = \n" + explicitBlendStr + "\n end\n"
+
+    outFile = open(fName,"r")
+    fullBlendStr = outFile.read()
+    outFile.close()
+
+    fullBlendStr = fullBlendStr + explicitBlendStr 
+
+    outFile = open(fName,"w")
+    outFile.write(fullBlendStr)
+    outFile.close()
+
+        # os.system("cp " + thName + " " + thName[:-3]+".casl")
+    os.system("rm *.th")
+    # blendFilesList += thName[:-3]+".casl\n"
+    blendFilesList += fName
+        
+    bNum = bNum + 1
+
+    # raw_input
+    fileListFile = open("blendFiles.txt","w")
+    fileListFile.write(blendFilesList)
+    fileListFile.close()
+    return explicitBlendStr
+
 
 # This function takes a list of blend speciications and writes them to disk.
 def writeBlends(blends):
@@ -253,6 +369,7 @@ def writeBlends(blends):
     bNum = 0
     blendFilesList = ''
     for blend in blends:
+
         blendStr = blend["prettyHetsStr"]
         fName = blend["blendName"] + "_b_"+str(bNum)+".casl"
         outFile = open(fName,"w")
@@ -260,6 +377,7 @@ def writeBlends(blends):
         outFile.close()
         tries = 0
         while True:
+            ### call HETS API
             subprocess.call([hetsExe, "-o th", fName])
             thName = fName[:-5]+"_Blend.th"
             thFileSize = 0

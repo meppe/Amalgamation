@@ -21,7 +21,10 @@ blendValuePercentageBelowHighestValueToKeep = 0
 eproverTimeLimit = 4
 darwinTimeLimit = 0.1
 
+
 ###### Path to the HETS executable ######
+useHetsAPI = 0
+hetsUrl = 'http://localhost:8000/'
 hetsExe = 'hets'
 
 ###### Switch to enable the explicit generation of blend files (see function writeBlends.py) ######
@@ -37,9 +40,6 @@ genExplicitBlendFiles = True
 # inputFile = "examples/LPNMR/houseBoat.casl"
 # inputSpaceNames = ["Boat","House"]
 
-# inputFile = "examples/LPNMR/cadenceBlendFusionTest.casl"
-# inputSpaceNames = ["PhrygianCadence","PerfectCadence"]
-
 # inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
 # inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
 # inputSpaceNames = ["Nat","List"]
@@ -47,4 +47,6 @@ genExplicitBlendFiles = True
 inputFile = "examples/music_IJCAI/music_blend.casl"
 inputSpaceNames = ["Emaj7","Fmin7"]
 
+inputFile = "examples/demo_examples/tritone_demo.casl"
+inputSpaceNames = ["G7","Bbmin"]
 
