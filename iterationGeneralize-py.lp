@@ -61,9 +61,11 @@ def onModelGeneralize(model):
             #print blendJson
             outFile.close()
             x = raw_input('Other blend? (n) ')
+            sys.stdout.flush()
             if x == 'n':
                break;
         print 'finished'
+        sys.stdout.flush()
         #print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
         # raw_input()
 
