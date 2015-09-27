@@ -1,0 +1,38 @@
+logic CASL.eCFOL=
+spec House =
+sorts Medium, Object, Person, PriorityDummySort
+op house : Object
+op land : Medium
+op object : Object
+op person : Person
+op prioDummyOp : PriorityDummySort
+op resident : Person
+op water : Medium
+pred on : Object * Medium
+
+. not land = water %(ga_disjoint_land_water)%
+
+%% free
+generated type Medium ::= land | water     %(ga_generated_Medium)%
+
+forall ob1 : Object . not (on(ob1, land) /\ on(ob1, water))
+                                          %(dis_LandOrWater:p:-1)%
+logic CASL.eCFOL=
+spec Boat =
+sorts Medium, Object, Person, PriorityDummySort
+op boat : Object
+op land : Medium
+op object : Object
+op passenger : Person
+op person : Person
+op prioDummyOp : PriorityDummySort
+op water : Medium
+pred on : Object * Medium
+
+. not land = water %(ga_disjoint_land_water)%
+
+%% free
+generated type Medium ::= land | water     %(ga_generated_Medium)%
+
+forall ob1 : Object . not (on(ob1, land) /\ on(ob1, water))
+                                          %(dis_LandOrWater:p:-1)%

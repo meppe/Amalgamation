@@ -37,16 +37,6 @@ genExplicitBlendFiles = True
 
 ## Here is space to quickly overwrite the above settings for debugging purposes.
 
-# inputFile = "examples/LPNMR/houseBoat.casl"
-# inputSpaceNames = ["Boat","House"]
-
-# inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
-# inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
-# inputSpaceNames = ["Nat","List"]
-
-inputFile = "examples/music_IJCAI/music_blend.casl"
-inputSpaceNames = ["Emaj7","Fmin7"]
-
-inputFile = "examples/demo_examples/tritone_demo.casl"
-inputSpaceNames = ["G7","Bbmin"]
+inputFile = "examples/AIJ-paper/houseboat.casl"
+inputSpaceNames = ["House","Boat"]
 
