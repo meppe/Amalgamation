@@ -6,6 +6,7 @@
 %%% Defining Part %%%
 %%%%%%%%%%%%%%%%%%%%%
 
+
 %%% The base program is iteration independent. These are just some auxiliary predicates.
 #program  base. 
 

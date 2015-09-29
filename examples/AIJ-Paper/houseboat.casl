@@ -1,0 +1,245 @@
+%%THIS IS A SPECIFICATION OF THE HOUSE BOAT EXAMPLE FROM 
+%%J. A. Goguen and D. F. Harrell. Foundations for active multimedia narrative: Semiotic spaces and structural blending. 
+%%Interaction Studies: Social Behaviour and Communication in Biological and Artificial Systems, 2005.
+
+%% WITH THIS FORMALISATON WE CANNOT GET THE BOATHOUSE
+
+spec SemSys = 
+  sort PriorityDummySort
+  op prioDummyOp : PriorityDummySort
+end
+
+spec Symbols = SemSys then
+    
+    free type Medium ::= land | water
+
+    sort Person
+    sort Object
+    ops
+         person: Person
+         object: Object
+    preds        
+        on: Object * Medium
+
+    forall ob1:Object
+      . not (on(ob1,land) /\ on(ob1,water))  %(dis_LandOrWater:p:-1)%    
+end
+
+spec Boat = Symbols then
+    
+    ops
+        boat: Object
+        passenger: Person
+    %% preds
+    %%     ride: Person * Object
+        
+    %% . ride(passenger,boat)
+    %% . on(boat,water)    
+end
+
+spec House = Symbols then
+   
+    ops
+        house: Object
+        resident: Person
+    %% preds
+    %%     liveIn: Person * Object
+        
+
+    %% . liveIn(resident,house)
+    %% . on(house,land)    
+end
+
+
+
+%% HOUSE BOAT BLEND
+
+%% in the boat:
+%%  -the operator ride is renamed to liveIn
+%%  -the operator passenger is renamed to resident
+%%  -the operator boat is renamed to house
+
+%% spec BoatGen = Symbols then
+    
+%%     ops
+%%         house: Object
+%%         resident: Person
+%%     preds
+%%         liveIn: Person * Object
+        
+%%     . liveIn(resident,house)
+%%     . on(house,water)    
+%% end 
+
+%% view BoatGenToBoat : BoatGen to Boat =  
+%%     resident |-> passenger, house |-> boat, liveIn |-> ride 
+%% end 
+
+%% in the house:
+%%  - the axiom .on(house,land) is removed
+
+%% spec HouseGen = Symbols then
+   
+%%     ops
+%%         house: Object
+%%         resident: Person
+%%     preds
+%%         liveIn: Person * Object
+        
+
+%%     . liveIn(resident,house)
+%%     %%. on(house,land)    
+%% end
+
+%% view HouseGenToHouse : HouseGen to House end
+
+%% %% the GenericSpace of HouseGen and BoatGen is
+
+%% spec GenericSpace = Symbols then
+    
+%%     ops
+%%         house: Object
+%%         resident: Person
+%%     preds
+%%         liveIn: Person * Object
+        
+%%     . liveIn(resident,house)
+%%     %%. on(boat,water)    
+%% end
+
+%% view GenericSpaceToBoatGen: GenericSpace to BoatGen end
+%% view GenericSpaceToHouseGen: GenericSpace to HouseGen end
+
+%% spec HouseBoat  = combine GenericSpaceToBoatGen,GenericSpaceToHouseGen end
+
+%% %% BOATHOUSE blend FAILED formaliation
+
+%% %% in the house:
+%% %%  -the operator resident is renamed to boat, Person -> Object
+%% %% - the axiom . on(house,land)  is removed 
+
+%% spec HouseGen2 = Symbols then
+   
+%%     ops
+%%         house: Object
+%%         boat: Object
+%%     preds
+%%         liveIn: Object * Object
+        
+
+%%     . liveIn(boat,house)
+%%     %%. on(house,land)    
+%% end
+
+%% view HouseGen2ToHouse : HouseGen2 to House = 
+%%     boat |-> resident, Object |-> Person
+%% end
+
+
+%% %% in the boat:
+%% %% - remove ride
+%% %% - remove passenger 
+%% %% - rename boat to house
+
+%% spec BoatGen2 = Symbols then
+    
+%%     ops
+%%         house: Object
+%%     %%    passenger: Person
+%%     %%preds
+%%     %%    ride: Person * Object
+        
+%%     %%s. ride(passenger,boat)
+%%     . on(house,water)    
+%% end
+
+%% view BoatGen2ToHouse : BoatGen2 to Boat = 
+%%     house |-> boat
+%% end
+
+
+%% %% the GenericSpace of HouseGen2 and BoatGen2 is
+
+%% spec GenericSpace2 = Symbols then
+    
+%%     ops
+%%         house: Object  
+%% end
+
+%% view GenericSpace2ToBoatGen2: GenericSpace2 to BoatGen2 end
+%% view GenericSpace2ToHouseGen2: GenericSpace2 to HouseGen2 end
+
+%% spec BoatHouse  = combine GenericSpace2ToBoatGen2,GenericSpace2ToHouseGen2 end
+
+
+%% %% BOATHOUSE blend 2 attempt
+
+
+%% %% in the boat:
+%% %% - rename ride to liveIn
+%% %% - rename passenger to boat, Person to Object
+%% %% - rename boat to house
+%% %% - rename axiom on(boat,water) to . on(house,water) 
+
+%% spec BoatGen3 = Symbols then
+    
+%%     ops
+%%         house: Object
+%%         boat: Object
+%%     preds
+%%         liveIn: Object * Object
+        
+%%     . liveIn(boat,house)
+%%     . on(house,water)   
+    
+%% end
+
+%% view BoatGen3ToHouse : BoatGen3 to Boat =
+%%     liveIn |-> ride, house |-> boat, boat |-> passenger, Object |-> Person
+%% end
+
+%% %% in the house:
+%% %% - rename resident to boat, Person to Object
+%% %% - remove axiom . on(house,land) 
+%% spec HouseGen3 = Symbols then
+%%    ops
+%%         house: Object
+%%         boat: Object
+%%     preds
+%%         liveIn: Object * Object
+        
+
+%%     . liveIn(boat,house)
+%%     %%. on(house,land) 
+     
+%% end
+
+%% view HouseGen3ToHouse : HouseGen3 to House = 
+%%     boat |-> resident, Object |-> Person
+%% end
+
+%% %% the GenericSpace of HouseGen2 and BoatGen2 is
+
+%% spec GenericSpace3 = Symbols then
+%%     ops
+%%         house: Object
+%%         boat: Object
+%%     preds
+%%         liveIn: Object * Object
+        
+
+%%     . liveIn(boat,house)
+%% end
+
+%% view GenericSpace3ToBoatGen3: GenericSpace3 to BoatGen3 end
+%% view GenericSpace3ToHouseGen3: GenericSpace3 to HouseGen3 end
+
+%% spec BoatHouse2  = combine GenericSpace3ToBoatGen3,GenericSpace3ToHouseGen3 end
+
+ %% THe blend above are the classics. 
+ %%There are other four interesting blends pointed out:
+ %% 3. a variant of the BoatHouse, in which the house is a passenger riding the boat
+ %% 4. an amphibiuos vehicle, a vehicle where you can live in and that you can ride on in land and on water (all aspects are kept)
+ %% 5. a livable boat for transporting livable boats (?)
+ %% 6. a boat used in land for a house (by omitting the axioms that require a house/boat to be on water and a passanger to rode a house/boat 
+
