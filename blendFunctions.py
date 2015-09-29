@@ -279,10 +279,15 @@ def writeJsonOutput(blends,inputSpaceNames):
         inputSpaceNr = 1
         for inputSpaceName in inputSpaceNames:
             inputSpace = inputSpaceName
-            genSpaceName= '_'+'gen'+'_'+str(combi[toLPName(inputSpace,'spec')])
+            if combi[toLPName(inputSpace,'spec')] > 0:
+                genSpaceName= '_'+'gen'+'_'+str(combi[toLPName(inputSpace,'spec')])
+            else:
+                genSpaceName=''
             print 'TETEET:' + genSpaceName
             genericSpacePattern = "(spec\s"+inputSpace+"(?=)"+genSpaceName+".*?end)"
+            
             match = re.search(genericSpacePattern,blendStr,re.DOTALL)
+
             jsonBlend['input'+str(inputSpaceNr)] = match.group(0)
 
             inputSpaceNr = inputSpaceNr +1
@@ -293,8 +298,6 @@ def writeJsonOutput(blends,inputSpaceNames):
         blendNr = blendNr +1
    
     return jsonOutput
-    #print json
-    #sys.exit()
 
 # This function takes a list of blend speciications and writes them to disk.
 def generateBlend(blend):

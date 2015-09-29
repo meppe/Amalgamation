@@ -40,13 +40,17 @@ genExplicitBlendFiles = True
 # inputFile = "examples/LPNMR/houseBoat.casl"
 # inputSpaceNames = ["Boat","House"]
 
+## This is quite slow... 
 # inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
-# inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
-# inputSpaceNames = ["Nat","List"]
+inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
+inputSpaceNames = ["Nat","List"]
 
-inputFile = "examples/music_IJCAI/music_blend.casl"
-inputSpaceNames = ["Emaj7","Fmin7"]
+## This is fast enough, but gives an error with json output...
+# inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
+inputFile = "examples/maths/naturalsAndLists_sum_minimal.casl"
+inputSpaceNames = ["Nat","List"]
 
-inputFile = "examples/demo_examples/tritone_demo.casl"
-inputSpaceNames = ["G7","Bbmin"]
+## This runs fine
+# inputFile = "examples/music/tritone_demo.casl"
+# inputSpaceNames = ["G7","Bbmin"]
 
