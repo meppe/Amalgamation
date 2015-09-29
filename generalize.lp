@@ -18,6 +18,7 @@ s(t).
 stepValue(A,Spec,-C,t)	 :- poss(A,Spec,t), cost(A,Spec,C).
 stepValue(A,Spec,V,t)	 :- poss(A,Spec,t), val(A,Spec,V).
 isOptimal(A1,Spec,t) 	 :- poss(A1,Spec,t), stepValue(A1,Spec,V1,t), 0{ a(A2,Spec) : poss(A2,Spec,t), stepValue(A2,Spec,V2,t), V2 > V1  }0.
+isOptimal(A1,Spec,t) 	 :- poss(A1,Spec,t), stepValue(A1,Spec,V1,t), 0{ a(A2,Spec) : poss(A2,Spec,t), stepValue(A2,Spec,V2,t), V2 > V1  }0.
 nonOptimalSteps(N,Spec,t) :- spec(Spec), N = {a(A,Spec) : exec(A,Spec,T),  not isOptimal(A,Spec,T), T <= t}.
 
 notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1 != Spec2.
@@ -29,7 +30,9 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 %% %% % Generate generalization search space. If the generic space is not yet reached, execute a generalization operation. 
 %% 0{exec(A,Spec,t) : a(A,Spec),  poss(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
 %% This is much faster, but also much more restrictive:
-0{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
+%% 0{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
+%% This is for one optimal generalization at a time over all specs. 
+1{exec(A,t) : isOptimal(A,t)}1 :- notGenericReached(t).
 
 %%%%%%%%%%%%%%%%%%%%
 %%% Testing Part %%%
