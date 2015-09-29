@@ -31,31 +31,35 @@
 %%%% Atomic operator declaration %%%%
 
 % Removal operators
-a(rm(Op,Spec)) 		:- removableOp(Spec,Op).
-a(rm(Pred,Spec)) 	:- removablePred(Spec,Pred).
-a(rm(Sort,Spec)) 	:- removableSort(Spec,Sort).
-a(rm(Ax,Spec)) 		:- removableAx(Spec,Ax).
+a(rmOp(Op),Spec) 		:- removableOp(Spec,Op).
+a(rmPred(Pred),Spec) 	:- removablePred(Spec,Pred).
+a(rmSort(Sort),Spec) 	:- removableSort(Spec,Sort).
+a(rmAx(Ax),Spec) 		:- removableAx(Spec,Ax).
 
-% merge operators. Only non-data elements can be renamed.
-a(merge(Op1,Spec1,Op2,Spec2)) 		:- 	hasOp(Spec1,Op1,0), hasOp(Spec2,Op2,0), Spec1 != Spec2, Op1 != Op2, 
+% Renaming operators. Only non-data elements can be renamed.
+a(renameOp(Op1,Op2,Spec2),Spec1) 		:- 	hasOp(Spec1,Op1,0), hasOp(Spec2,Op2,0), Spec1 != Spec2, Op1 != Op2, 
 											isNonDataOp(Spec1,Op1), isNonDataOp(Spec2,Op2).
 
-% merge predicates.
-a(merge(Pred1,Spec1,Pred2,Spec2)) 	:- 	hasPred(Spec1,Pred1,0), hasPred(Spec2,Pred2,0), Spec1 != Spec2, Pred1 != Pred2.
+% Renaming predicates.
+a(renamePred(Pred1,Pred2,Spec2),Spec1) 	:- 	hasPred(Spec1,Pred1,0), hasPred(Spec2,Pred2,0), Spec1 != Spec2, Pred1 != Pred2.
 
-% merge sorts.
-a(merge(Sort1,Spec1,Sort2,Spec2)) 	:- 	hasSort(Spec1,Sort1,0), hasSort(Spec2,Sort2,0), Sort1 != Sort2,
+% Renaming sorts.
+a(renameSort(Sort1,Sort2,Spec2),Spec1) 	:- 	hasSort(Spec1,Sort1,0), hasSort(Spec2,Sort2,0), Sort1 != Sort2,
 											isNonDataSort(Spec1,Sort1), isNonDataSort(Spec2,Sort2).
-% generalize an element within a spec.
-a(generalize(Sort,Spec)) 	:- 	hasSort(Spec,Sort,0), isNonDataSort(Spec,Sort), hasParentSort(Spec,Sort,_,0).
 
-
-%%%% Value / Cost of actions %%%%
-
-% Value of removal actions is the negative of the element priority. 
-val(rm(E,Spec),-P) 			:- a(rm(E,Spec)), priority(Spec,E,P).
-% Value of merge actions is equal to sum of priorities.
-val(merge(E1,Spec1,E2,Spec2),P1+P2)		:- a(merge(E1,Spec1,E2,Spec2)),	priority(Spec1,E1,P1), priority(Spec2,E2,P2).
+%%%% Cost of actions %%%%
+% Cost of removal actions is equal to priority of the elements to be removed.  
+cost(rmOp(Op),Spec,C) 		:- a(rmOp(Op),Spec), 		opHasPriority(Spec,Op,C).
+cost(rmPred(Pred),Spec,C) 	:- a(rmPred(Pred),Spec), 	predHasPriority(Spec,Pred,C).
+cost(rmSort(Sort),Spec,C) 	:- a(rmSort(Sort),Spec), 	sortHasPriority(Spec,Sort,C).
+cost(rmAx(Ax),Spec,C) 		:- a(rmAx(Ax),Spec), 		axHasPriority(Spec,Ax,C).
+% Value of renaming actions is equal to priority.
+val(renameOp(Op1,Op2,Spec2),Spec1,V)		:- a(renameOp(Op1,Op2,Spec2),Spec1),			opHasPriority(Spec1,Op1,P),		V = P.
+%% val(renamedToOp(Op),Spec,V)					:- a(renamedToOp(Op),Spec),						opHasPriority(Spec,Op,P),		V = P.
+val(renamePred(Pred1,Pred2,Spec2),Spec1,V)	:- a(renamePred(Pred1,Pred2,Spec2),Spec1),		predHasPriority(Spec1,Pred1,P),	V = P.
+%% val(renamedToPred(Pred),Spec,V)				:- a(renamedToPred(Pred),Spec),					predHasPriority(Spec,Pred,P),	V = P.
+val(renameSort(Sort1,Sort2,Spec2),Spec1,V)	:- a(renameSort(Sort1,Sort2,Spec2),Spec1),		sortHasPriority(Spec1,Sort1,P),	V = P.
+%% val(renamedToSort(Sort),Spec,V)				:- a(renamedToSort(Sort),Spec),					sortHasPriority(Spec,Sort,P),	V = P.
 
 %%% Start to iterate over t.
 #program cumulative(t).
@@ -64,21 +68,21 @@ val(merge(E1,Spec1,E2,Spec2),P1+P2)		:- a(merge(E1,Spec1,E2,Spec2)),	priority(Sp
 
 %%% Removal Operators
 % Remove Operator
-poss(rm(Op,Spec),t) 		:- 	hasOp(Spec,Op,t),	removableOp(Spec,Op), exOtherSpecWithoutOp(Spec,Op,t),
+poss(rmOp(Op),Spec,t) 		:- 	hasOp(Spec,Op,t),	removableOp(Spec,Op), exOtherSpecWithoutOp(Spec,Op,t),
 								0{hasAxiom(Spec,Ax,t) : axInvolvesPredOp(Spec,Ax,Op,t)}0.
 exOtherSpecWithoutOp(Spec1,Op,t) :- hasOp(Spec1,Op,t), not hasOp(Spec2,Op,t), spec(Spec2), Spec1 != Spec2. 
 
 % Remove Predicate
-poss(rm(Pred,Spec),t) 	:- 	hasPred(Spec,Pred,t), removablePred(Spec,Pred), exOtherSpecWithoutPred(Spec,Pred,t), 
+poss(rmPred(Pred),Spec,t) 	:- 	hasPred(Spec,Pred,t), removablePred(Spec,Pred), exOtherSpecWithoutPred(Spec,Pred,t), 
 								0{hasAxiom(Spec,Ax,t) : axInvolvesPredOp(Spec,Ax,Pred,t)}0.
 exOtherSpecWithoutPred(Spec1,Pred,t) :- hasPred(Spec1,Pred,t), not hasPred(Spec2,Pred,t), spec(Spec2), Spec1 != Spec2. 
 
 % Remove Axiom
-poss(rm(Ax,Spec),t) 		:- 	hasAxiom(Spec,Ax,t), removableAx(Spec,Ax), exOtherSpecWithoutEqivAx(Spec,Ax,t).
+poss(rmAx(Ax),Spec,t) 		:- 	hasAxiom(Spec,Ax,t), removableAx(Spec,Ax), exOtherSpecWithoutEqivAx(Spec,Ax,t).
 exOtherSpecWithoutEqivAx(Spec1,Ax,t) 	:- 	hasAxiom(Spec1,Ax,t), 0{axEquivalent(Spec1,Ax,Spec2,_,t)}0, 
 											spec(Spec2), Spec1 != Spec2. 
 % Remove Sort 
-poss(rm(Sort,Spec),t) 	:- 	hasSort(Spec,Sort,t), removableSort(Spec,Sort), exOtherSpecWithoutSort(Spec,Sort,t),
+poss(rmSort(Sort),Spec,t) 	:- 	hasSort(Spec,Sort,t), removableSort(Spec,Sort), exOtherSpecWithoutSort(Spec,Sort,t),
 								isNotParentSort(Spec,Sort,t),
 								noOpUsesSort(Spec,Sort,t), noPredUsesSort(Spec,Sort,t), noAxUsesSort(Spec,Sort,t).
 exOtherSpecWithoutSort(Spec1,Sort,t) :- hasSort(Spec1,Sort,t), not hasSort(Spec2,Sort,t), spec(Spec2), Spec1 != Spec2. 								
@@ -89,32 +93,40 @@ noPredUsesSort(Spec,Sort,t) 	:- 	0{hasPred(Spec,Pred,t) : predHasSort(Spec,Pred,
 noAxUsesSort(Spec,Sort,t) 		:- 	0{hasAxiom(Spec,Ax,t) : axInvolvesSort(Spec,Ax,Sort,t)}0, 	hasSort(Spec,Sort,t).
 
 
-%%% merge Operators
-poss(merge(Op1,Spec1,Op2,Spec2),t) :- 	a(merge(Op1,Spec1,Op2,Spec2)),
+%%% Rename Operator
+poss(renameOp(Op1,Op2,Spec2),Spec1,t) :- 	a(renameOp(Op1,Op2,Spec2),Spec1), 
 											hasOp(Spec1,Op1,t), hasOp(Spec2,Op2,t),
 											not exec(rmOp(Op2),Spec2,t),
 											not opSortsNotEquivalent(Spec1,Op1,Spec2,Op2,t), 
 											not hasOp(Spec1,Op2,t), not hasOp(Spec2,Op1,t),
-											specProvidesVocabulary(Spec2). 											
+											specProvidesVocabulary(Spec2).
+%% poss(renamedToOp(Op2),Spec2,t) :- exec(renameOp(_,Op2,Spec2),_,t). 											
 
-%%% merge Predicates
-poss(merge(Pred1,Spec1,Pred2,Spec2),t) :- 	a(merge(Pred1,Spec1,Pred2,Spec2)),
+%%% Rename Predicate
+poss(renamePred(Pred1,Pred2,Spec2),Spec1,t) :- 	a(renamePred(Pred1,Pred2,Spec2),Spec1), 
 												hasPred(Spec1,Pred1,t), hasPred(Spec2,Pred2,t), 
 												not exec(rmPred(Pred2),Spec2,t),
 												not predSortsNotEquivalent(Spec1,Pred1,Spec2,Pred2,t), 
 												not hasPred(Spec1,Pred2,t), not hasPred(Spec2,Pred1,t),
-												specProvidesVocabulary(Spec2).							
-%%% merge Sort
-poss(merge(Sort1,Spec1,Sort2,Spec2),t) :- 	a(merge(Sort1,Spec1,Sort2,Spec2)), 
+												specProvidesVocabulary(Spec2).
+%% poss(renamedToPred(Pred2),Spec2,t) :- exec(renamePred(_,Pred2,Spec2),_,t). 																							
+%%% Rename Sort
+poss(renameSort(Sort1,Sort2,Spec2),Spec1,t) :- 	a(renameSort(Sort1,Sort2,Spec2),Spec1), 
 												hasSort(Spec1,Sort1,t), hasSort(Spec2,Sort2,t), 
 												not exec(rmSort(Sort2),Spec2,t),
 												not hasSort(Spec1,Sort2,t), not hasSort(Spec2,Sort1,t),
 												specProvidesVocabulary(Spec2).
-%%% generalize a sort
-poss(generalize(Sort,Spec),t) :- 			a(generalize(Sort,Spec)),
-												hasSort(Spec,Sort,t), 
-												hasParentSort(Spec,Sort,Sort_parent,t).
 
+poss(renameSort(Sort_child,Sort_parent,Spec1),Spec1,t) :- 	a(renameSort(Sort_child,Sort_parent,Spec1),Spec1), 
+												hasSort(Spec1,Sort_child,t), hasSort(Spec1,Sort_parent,t), 
+												not exec(rmSort(Sort_child),Spec1,t),
+												not exec(rmSort(Sort_parent),Spec1,t),												
+												hasParentSort(Spec,Sort_child,Sort_parent,t+1).
+
+%% poss(renamedToSort(Sort2),Spec2,t) :- exec(renameSort(_,Sort2,Spec2),_,t). 																											
+%%%% Equality of conceptual spaces %%%%
+%% equal(Spec,Spec,t) 		:- 	spec(Spec).
+%% equal(Spec1,Spec2,t) 	:- 	not notEqual(Spec1,Spec2,t), spec(Spec1), spec(Spec2).
 
 notEqual(Spec1,Spec2,t) :- opNotEquivalent(Spec1,Spec2,_,t).
 notEqual(Spec1,Spec2,t) :- predNotEquivalent(Spec1,Spec2,_,t).
@@ -149,11 +161,13 @@ removableAx(Spec,Ax) 		:- isNonDataAx(Spec,Ax), not axHasPriority(Spec,Ax,-1).
 
 %%%% Inertia rules for sorts, operators, predicates and axioms. This is dynamic and we need to iterate over t, hence we have a cumulative part again.
 #program cumulative(t).
-noninertial(Spec,E,t)			:- 	exec(rm(E,Spec),t).
-noninertial(Spec,E,t)			:- 	exec(merge(E,Spec,_,_),t).
-noninertial(Spec,E,t)			:- 	exec(merge(_,_,E,Spec),t).
-noninertial(Spec,E,t)			:- 	exec(gen(E,Spec),t).
-
+noninertial(Spec,Ax,t)		:- 	exec(rmAx(Ax),Spec,t).
+noninertial(Spec,Op,t)		:- 	exec(rmOp(Op),Spec,t).
+noninertial(Spec,Op,t)		:- 	exec(renameOp(Op,_,_),Spec,t).
+noninertial(Spec,Pred,t)	:-	exec(rmPred(Pred),Spec,t).
+noninertial(Spec,Pred,t)	:- 	exec(renamePred(Pred,_,_),Spec,t).
+noninertial(Spec,Sort,t)	:-	exec(rmSort(Sort),Spec,t).
+noninertial(Spec,Sort,t)	:-	exec(renameSort(Sort,_,_),Spec,t).		
 
 
 hasAxiom(Spec,Ax,t+1) 	:- 	hasAxiom(Spec,Ax,t), 	not noninertial(Spec,Ax,t).
@@ -173,12 +187,12 @@ predHasSort(Spec,Pred,Sort,Pos,t+1) 	:- 	predHasSort(Spec,Pred,Sort,Pos,t), not 
 
 %%%% Effect axioms of renamings for sorts, operators, predicates and axioms (i.e. quantifications and atoms in axioms)
 % Effects of renaming sorts:
-hasSort(Spec,Sort2,t+1) 					:-	hasSort(Spec,Sort1,t), 					exec(merge(Sort1,Spec1,Sort2,Spec2),t).
-hasParentSort(Spec,Sort_child,Sort2,t+1) 	:-	hasParentSort(Spec,Sort_child,Sort1,t),	exec(merge(Sort1,Spec1,Sort2,Spec2),t).
-hasParentSort(Spec,Sort2,Sort_par,t+1) 		:-	hasParentSort(Spec,Sort1,Sort_par,t), 	exec(merge(Sort1,Spec1,Sort2,Spec2),t).
-opHasSort(Spec,Op,Sort2,Pos,t+1) 			:-	opHasSort(Spec,Op,Sort1,Pos,t),			exec(merge(Sort1,Spec1,Sort2,Spec2),t).
-predHasSort(Spec,Pred,Sort2,Pos,t+1) 		:- 	predHasSort(Spec,Pred,Sort1,Pos,t), 	exec(merge(Sort1,Spec1,Sort2,Spec2),t).
-axInvolvesSort(Spec,Ax,Sort2,t+1) 			:- 	axInvolvesSort(Spec,Ax,Sort1,t),		exec(merge(Sort1,Spec1,Sort2,Spec2),t).
+hasSort(Spec,Sort2,t+1) 					:-	hasSort(Spec,Sort1,t), 					exec(renameSort(Sort1,Sort2,Spec2),Spec,t).
+hasParentSort(Spec,Sort_child,Sort2,t+1) 	:-	hasParentSort(Spec,Sort_child,Sort1,t),	exec(renameSort(Sort1,Sort2,Spec2),Spec,t).
+hasParentSort(Spec,Sort2,Sort_par,t+1) 		:-	hasParentSort(Spec,Sort1,Sort_par,t), 	exec(renameSort(Sort1,Sort2,Spec2),Spec,t).
+opHasSort(Spec,Op,Sort2,Pos,t+1) 			:-	opHasSort(Spec,Op,Sort1,Pos,t),			exec(renameSort(Sort1,Sort2,Spec2),Spec,t).
+predHasSort(Spec,Pred,Sort2,Pos,t+1) 		:- 	predHasSort(Spec,Pred,Sort1,Pos,t), 	exec(renameSort(Sort1,Sort2,Spec2),Spec,t).
+axInvolvesSort(Spec,Ax,Sort2,t+1) 			:- 	axInvolvesSort(Spec,Ax,Sort1,t),		exec(renameSort(Sort1,Sort2,Spec2),Spec,t).
 % Effects of renaming operators:
 hasOp(Spec1,Op2,t+1) 						:-	hasOp(Spec1,Op1,t),						exec(renameOp(Op1,Op2,Spec2),Spec1,t).
 opHasSort(Spec1,Op2,Sort,Pos,t+1)			:-	opHasSort(Spec1,Op1,Sort,Pos,t),		exec(renameOp(Op1,Op2,Spec2),Spec1,t).
