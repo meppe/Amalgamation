@@ -48,6 +48,7 @@ specModified(Spec,t) :- exec(_,Spec,t).
 
 
 
+
 #show s/1.
 #show notGenericReached/1.
 #show exec/3.
