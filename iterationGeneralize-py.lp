@@ -35,13 +35,14 @@ highestValue = -sys.maxint
 
 # This is called if a model is found.
 def onModelGeneralize(model):    
-    global inputFile, highestValue, blends
+    global inputFile, highestValue, blends, generaliseOnly
     lpFileName = inputFile.split(".")[0]+".lp"
 
     print "Found generalisation:"
     modelStr = getModel(model)
-    ## print modelStr
-    # return
+    if generaliseOnly:
+        print modelStr
+        return
     [blends,blendingGeneralizationValue] = findLeastGeneralizedBlends(model.atoms(), inputSpaces, highestValue, blends) 
     # print blendingGeneralizationValue  
     if blendingGeneralizationValue >= highestValue and blendingGeneralizationValue > -sys.maxint:

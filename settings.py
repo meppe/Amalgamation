@@ -31,6 +31,10 @@ hetsExe = 'hets'
 genExplicitBlendFiles = True
 
 
+###### A switch to determine whether to only generalise or whether to also blend
+generaliseOnly = True
+
+
 
 
 ###################################################################
@@ -40,17 +44,20 @@ genExplicitBlendFiles = True
 # inputFile = "examples/LPNMR/houseBoat.casl"
 # inputSpaceNames = ["Boat","House"]
 
-## This is quite slow... 
-# inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
-inputFile = "examples/LPNMR/naturalsAndLists_fact_minimal.casl"
-inputSpaceNames = ["Nat","List"]
+# inputFile = "examples/maths/naturalsAndLists_fact.casl"
+# This takes around 7 minutes to solve
+# inputFile = "examples/maths/naturalsAndLists_fact_minimal.casl"
+# inputSpaceNames = ["Nat","List"]
 
-## This is fast enough, but gives an error with json output...
 # inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
-inputFile = "examples/maths/naturalsAndLists_sum_minimal.casl"
-inputSpaceNames = ["Nat","List"]
+# This takes around 2 minutes to solve
+# inputFile = "examples/maths/naturalsAndLists_sum_minimal.casl"
+# inputSpaceNames = ["Nat","List"]
 
 ## This runs fine
 # inputFile = "examples/music/tritone_demo.casl"
 # inputSpaceNames = ["G7","Bbmin"]
+
+inputFile = "examples/testExamples/generaliseSortTest.casl"
+inputSpaceNames = ["S1","S2"]
 

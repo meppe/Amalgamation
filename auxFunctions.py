@@ -65,6 +65,43 @@ class Command(object):
 def pow(n1,n2):
     return int(math.pow(int(n1),int(n2)))
 
+
+    
+def aggregateSortsInQuanti(axStr):
+    # Aggregate variables in quantifications if necessary. E.g. change
+    # forall x : Parent2; y : Parent2 . someOp1(someOp8) = someOp8(y, x)
+    # to
+    # forall x, y : Parent2 . someOp1(someOp8) = someOp8(y, x)
+    
+    #find varlist and sort pairs
+    axStrHead = axStr.split(" .")[0]
+    if axStrHead.find("forall") == -1 and axStrHead.find("exists") == -1:
+        return axStr
+
+    # print "quantified axiom detected"
+    axStrVarsStr = axStrHead[len(axStrHead.split(" ")[0])+1:]
+    varListSortPairStrs = axStrVarsStr.split("; ")
+    sorts = {}
+    for vlspStr in varListSortPairStrs:
+        vlStr = vlspStr.split(" :")[0]
+        vl = vlStr.split(", ")
+        sortName = vlspStr.split(": ")[1]
+        if sortName not in sorts.keys():
+            sorts[sortName] = []
+        sorts[sortName] += vl
+
+    newAxStr = axStr.split(" ")[0] + " "
+    for sort in sorted(sorts):  
+        for v in sorted(sorts[sort]):
+            newAxStr += v + ", "
+        newAxStr = newAxStr[:-2]
+        newAxStr = newAxStr + " : " + sort
+        newAxStr = newAxStr + "; "
+    newAxStr = newAxStr[:-2] + " . "
+    newAxStr = newAxStr + axStr.split(". ")[1]
+    return newAxStr
+
+
 # def getCombinedCost(c1,c2):
 #     ic1 = int(c1)
 #     ic2 = int(c2)

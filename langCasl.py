@@ -814,6 +814,45 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
                             #         cSpec.compressionValue = cSpec.compressionValue + srt.priority
                             #         break          
 
+                        ########################## BEGIN genSort     ########################## 
+                        if act["actType"] == "genSort" :
+                            sFrom = act["argVect"][0]
+                            sTo = act["argVect"][1]
+                            print "generalising sort " + sFrom + " to " + sTo
+                            for s in cSpec.sorts:
+                                if toLPName(s.name,"sort") == sFrom:
+                                    cSpec.sorts.remove(s)
+                                    newSort = copy.deepcopy(s)
+                                    newSort.name = lpToCaslStr(sTo)
+                                    cSpec.sorts.append(newSort)                                    
+
+                            # change parent sorts of other sorts in this spec.
+                            for s in cSpec.sorts:
+                                if toLPName(s.parent,"sort") == sFrom:
+                                    s.parent = lpToCaslStr(sTo)
+                                    break                            
+
+                            # Get axioms that involve the sort and rename the sorts
+                            for ax in cSpec.axioms:
+                                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(sFrom)+"(?!\w)", lpToCaslStr(sTo), ax.axStr)
+                                ax.axStr = newAxStr
+
+                            # change sorts in operators
+                            for op in cSpec.ops:
+                                # change domain sort. 
+                                if op.dom == lpToCaslStr(sFrom):
+                                    op.dom = newSort.name
+                                for n,opSort in enumerate(op.args):
+                                    if opSort == lpToCaslStr(sFrom):
+                                        op.args[n] = newSort.name
+
+                            # change sorts in predicates
+                            for p in cSpec.preds:
+                                # change domain sort. 
+                                for n,pSort in enumerate(p.args):
+                                    if pSort == lpToCaslStr(sFrom):
+                                        p.args[n] = newSort.name
+                        ########################## END genSort     ########################## 
 
                         if act["actType"] == "rmAx" :
                             for a in cSpec.axioms:
@@ -825,11 +864,7 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
                     thisCSpec = copy.deepcopy(cSpec)
                     thisCSpec.name = thisCSpec.name + "_gen_" + str(len(generalizations[thisCSpec.name]))
                     thisCSpec.totalSteps = step
-                    # thisCSpec.compressionValue = compressionValue
                     generalizations[cSpec.name].append(thisCSpec)
-                    # print "generalization"
-                    # print thisCSpec.toCaslStr()
-                    # raw_input()
 
     # add one last generic cSpec
     genSpec = copy.deepcopy(generalizations[lastSpecName][len(generalizations[lastSpecName])-1])
@@ -841,10 +876,8 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
     # compute infoValues
     for specList in generalizations.values():
         for spec in specList:
-            spec.setInfoValue()
-             
+            spec.setInfoValue()             
             print spec.toCaslStr()
-    # exit(1)
 
     return generalizations
 
@@ -881,6 +914,9 @@ def getNewAxIdOpRename(axId,op1,op2):
 def getEquivalenceClass(axStr):
     global axEqClasses
 
+    # print "getting new eqClass for " 
+    # print axStr
+
     for eqClassId in axEqClasses.keys():
         if isEquivalent(axStr,axEqClasses[eqClassId]):
             return eqClassId
@@ -893,11 +929,17 @@ def getEquivalenceClass(axStr):
 def renameEleAndGetNewEqClass(eqClassId,element,eleFrom,eleTo):
     global axEqClasses
 
-    axStr = axEqClasses[int(eqClassId)]
+    axStr = axEqClasses[int(eqClassId)]    
+
     # print "renaming " + str(eleFrom) + " to " + str(eleTo) + " in axiom " + str(axStr)
     newAxStr = re.sub("(?<!\w)"+lpToCaslStr(str(eleFrom))+"(?!\w)",lpToCaslStr(str(eleTo)),axStr)
-    # print " result " + newAxStr
+
+    # This is necessary to normalize (aggregate) variable list in string
+    if axStr != newAxStr:
+        newAxStr = aggregateSortsInQuanti(newAxStr)
+
     return getEquivalenceClass(newAxStr)
+
 
 def isEquivalent(axStr1,axStr2):
     return axStr1 == axStr2

@@ -27,8 +27,12 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 
 %% %% % Generate generalization search space. If the generic space is not yet reached, execute a generalization operation. 
 %% 0{exec(A,Spec,t) : a(A,Spec),  poss(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
-%% This is much faster, but also much more restrictive:
-0{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
+%% This is much faster, but also much more restrictive, because it only allows optimal generalisations:
+%% 0{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
+%% This allows only one generalisation on one of the specifications at a time. 
+%% 1{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t).
+%% This allows only one generalisation on one of the specifications at a time, with necessity of optimal steps. Note that this sometimes leads to unsatisfiability. 
+1{exec(A,Spec,t) : a(A,Spec)}1 :- notGenericReached(t).
 
 %%%%%%%%%%%%%%%%%%%%
 %%% Testing Part %%%
@@ -36,8 +40,8 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 
 %% Domain-independent heuristics:
 %% Speedup 1: No "gaps" on operation steps if a generalisation is possible to fill the gap: if no operation happens at a step for a certain spec, even though an operation would be possible, then no operations will happen in the future anymore. This has to be disabled if using a generation rule which only applies one operation per step in total. It also might cause problems in cases where something has first to be removed and then to be renamed.
-specModified(Spec,t) :- exec(_,Spec,t).
-:- specModified(Spec,t), not specModified(Spec,T_before), T_before < t, s(T_before), poss(_,Spec,T_before).
+%% specModified(Spec,t) :- exec(_,Spec,t).
+%% :- specModified(Spec,t), not specModified(Spec,T_before), T_before < t, s(T_before), poss(_,Spec,T_before).
 
 %% Speedup 2: Allow only a limited number on non-optimal steps. 
 %% :- nonOptimalSteps(N,Spec,t), N > 3.
@@ -48,8 +52,11 @@ specModified(Spec,t) :- exec(_,Spec,t).
 
 
 
-
 #show s/1.
 #show notGenericReached/1.
 #show exec/3.
-%% #show poss/3.
+
+%%%%%%%%% DEBUG OUTPUT %%%%%%%%%%%%%
+%% stepValueAtT(A,Spec,V) :- stepValue(A,Spec,V,t), t = 0, poss(A,Spec,t).
+%% #show stepValueAtT/3.
+

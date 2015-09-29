@@ -1,0 +1,45 @@
+%% This is a test example for generalising sorts
+
+spec S1 =
+  sort Parent1
+  sort Child1
+  sort Child1 < Parent1
+  sort Other1
+
+  op someOp1 : Child1
+  %% op someOp2 : Parent1
+  %% op someOp3 : Other1 -> Child1
+  %% op someOp4 : Child1 -> Other1
+  %% op someOp5 : Other1 -> Parent1
+  %% op someOp6 : Parent1 -> Other1
+  %% op someOp7 : Parent1 -> Child1
+  op someOp8 : Child1 -> Parent1
+  op someOp9 : Child1 * Parent1 -> Parent1
+
+  forall x:Parent1, y:Child1
+  . someOp8(someOp1) = someOp9(y,x)
+
+end
+  
+
+spec S2 =
+  sort Parent2
+  sort Other2
+
+  op someOp1 : Parent2
+  %% op someOp2 : Parent1
+  %% op someOp3 : Other1 -> Child1
+  %% op someOp4 : Child1 -> Other1
+  %% op someOp5 : Other1 -> Parent1
+  %% op someOp6 : Parent1 -> Other1
+  %% op someOp7 : Parent1 -> Child1
+  op someOp8 : Parent2 -> Parent2
+  op someOp9 : Parent2 * Parent2 -> Parent2
+
+  forall x:Parent2, y:Parent2
+  . someOp8(someOp1) = someOp9(y,x)
+
+
+end
+
+

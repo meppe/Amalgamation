@@ -255,8 +255,7 @@ def writeJsonOutput(blends,inputSpaceNames):
 
     jsonOutput = {}
     jsonOutput['blendList'] = []
-    
-    
+        
     print inputSpaceNames
     blendNr = 1
     for blend in blends:
