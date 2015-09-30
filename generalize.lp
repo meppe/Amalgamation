@@ -32,7 +32,7 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 %% This allows only one generalisation on one of the specifications at a time. 
 %% 1{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t).
 %% This allows only one generalisation on one of the specifications at a time, with necessity of optimal steps. Note that this sometimes leads to unsatisfiability. 
-1{exec(A,Spec,t) : a(A,Spec)}1 :- notGenericReached(t).
+1{exec(A,Spec,t) : poss(A,Spec,t)}1 :- notGenericReached(t).
 
 %%%%%%%%%%%%%%%%%%%%
 %%% Testing Part %%%

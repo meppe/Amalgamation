@@ -32,7 +32,7 @@ genExplicitBlendFiles = True
 
 
 ###### A switch to determine whether to only generalise or whether to also blend
-generaliseOnly = True
+generaliseOnly = False
 
 
 
@@ -58,6 +58,12 @@ generaliseOnly = True
 # inputFile = "examples/music/tritone_demo.casl"
 # inputSpaceNames = ["G7","Bbmin"]
 
-inputFile = "examples/testExamples/generaliseSortTest.casl"
-inputSpaceNames = ["S1","S2"]
+# inputFile = "examples/testExamples/generaliseSortTest.casl"
+# inputSpaceNames = ["S1","S2"]
 
+########## AIJ-paper examples ##############
+inputFile = "examples/AIJ-paper/tritone_demo.casl"
+inputSpaceNames = ["G7","Bbmin"]
+
+inputFile = "examples/AIJ-paper/naturalsAndLists_sum_minimal.casl"
+inputSpaceNames = ["Nat","List"]

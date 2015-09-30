@@ -132,7 +132,10 @@ class CaslPred:
         argCtr = 1
         for arg in self.args:
             oStr = oStr + "predHasSort("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+","+toLPName(arg,"sort")+",arg"+str(argCtr)+",0).\n"
-            argCtr = argCtr + 1        
+            argCtr = argCtr + 1   
+
+        argCtr = argCtr - 1       
+        oStr = oStr + "hasNumArgs("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+","+str(argCtr)+").\n"      
         # if self. == True:
             # oStr = oStr + "removablePred("+toLPName(specName,"spec")+","+toLPName(self.name)+").\n"
         oStr = oStr + "predHasPriority("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+","+str(self.priority)+").\n"        
@@ -193,6 +196,8 @@ class CaslOp:
             oStr = oStr + "opHasSort("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+","+toLPName(arg,"sort")+",arg"+str(argCtr)+",0).\n"
             argCtr = argCtr + 1
         oStr = oStr + "opHasSort("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+","+toLPName(self.dom,"sort")+",domain,0).\n"
+        argCtr = argCtr - 1
+        oStr = oStr + "hasNumArgs("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+","+str(argCtr)+").\n"
         if self.isDataOp == False:
             oStr = oStr + "isNonDataOp("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+").\n"
         else:

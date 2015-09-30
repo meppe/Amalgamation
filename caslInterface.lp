@@ -112,6 +112,7 @@ poss(renameOp(Op1,Op2,Spec2),Spec1,t) :- 	a(renameOp(Op1,Op2,Spec2),Spec1),
 											not exec(rmOp(Op2),Spec2,t),
 											not opSortsNotEquivalent(Spec1,Op1,Spec2,Op2,t), 
 											not hasOp(Spec1,Op2,t), not hasOp(Spec2,Op1,t),
+											removableOp(Spec1,Op1),
 											specProvidesVocabulary(Spec2).
 %% poss(renamedToOp(Op2),Spec2,t) :- exec(renameOp(_,Op2,Spec2),_,t). 											
 
@@ -121,6 +122,7 @@ poss(renamePred(Pred1,Pred2,Spec2),Spec1,t) :- 	a(renamePred(Pred1,Pred2,Spec2),
 												not exec(rmPred(Pred2),Spec2,t),
 												not predSortsNotEquivalent(Spec1,Pred1,Spec2,Pred2,t), 
 												not hasPred(Spec1,Pred2,t), not hasPred(Spec2,Pred1,t),
+												removablePred(Spec1,Pred1),
 												specProvidesVocabulary(Spec2).
 %% poss(renamedToPred(Pred2),Spec2,t) :- exec(renamePred(_,Pred2,Spec2),_,t). 																							
 %%% Rename Sort
@@ -128,11 +130,13 @@ poss(renameSort(Sort1,Sort2,Spec2),Spec1,t) :- 	a(renameSort(Sort1,Sort2,Spec2),
 												hasSort(Spec1,Sort1,t), hasSort(Spec2,Sort2,t), 
 												not exec(rmSort(Sort2),Spec2,t),
 												not hasSort(Spec1,Sort2,t), not hasSort(Spec2,Sort1,t),
+												removableSort(Spec1,Sort1),
 												specProvidesVocabulary(Spec2).
 %%% Generalise sort
-poss(genSort(Sort,SortP),Spec,t) :- 	a(genSort(Sort,SortP),Spec1), 
-								%% not exec(rmSort(Sort),Spec,t), not exec(renameSort(Sort,_,_),Spec,t),
-								hasSort(Spec,Sort,t), hasParentSort(Spec,Sort,SortP,t).
+poss(genSort(Sort,SortP),Spec,t) :- 	a(genSort(Sort,SortP),Spec), 
+										removableSort(Spec,Sort),
+										%% not exec(rmSort(Sort),Spec,t), not exec(renameSort(Sort,_,_),Spec,t),
+										hasSort(Spec,Sort,t), hasParentSort(Spec,Sort,SortP,t).
 								
 								
 
@@ -285,15 +289,34 @@ axEquivalent(Spec1,Ax1,Spec2,Ax2,t) :- 	hasAxiom(Spec1,Ax1,t), axHasEquivalenceC
 
 axHasEquivalenceClass(Spec,Ax,EC,t+1) :- axHasEquivalenceClass(Spec,Ax,EC,t), not axChanged(Spec,Ax,t), hasAxiom(Spec,Ax,t).
 
-axHasEquivalenceClass(Spec,Ax,ECNew,t+1) :- axHasEquivalenceClass(Spec,Ax,ECOld,t), axChanged(Spec,Ax,Element,EleFrom,EleTo,t), 
-												hasAxiom(Spec,Ax,t), ECNew = @renameEleAndGetNewEqClass(ECOld,Element,EleFrom,EleTo).
+%% axHasEquivalenceClass(Spec,Ax,ECNew,t+1) :- axHasEquivalenceClass(Spec,Ax,ECOld,t), 
+%% 												axChanged(Spec,Ax,Element,EleFrom,EleTo,t), 
+%% 												hasAxiom(Spec,Ax,t), ECNew = @renameEleAndGetNewEqClass(ECOld,Element,EleFrom,EleTo).
 
+axHasEquivalenceClass(Spec,Ax,ECNew,t+1) :- axHasEquivalenceClass(Spec,Ax,ECOld,t), 
+												axChanged(Spec,Ax,op,EleFrom,EleTo,t), 
+												hasNumArgs(_,EleFrom,NA), hasNumArgs(_,EleTo,NA),
+												hasAxiom(Spec,Ax,t), ECNew = @renameEleAndGetNewEqClass(ECOld,op,EleFrom,EleTo).			
+
+axHasEquivalenceClass(Spec,Ax,ECNew,t+1) :- axHasEquivalenceClass(Spec,Ax,ECOld,t), 
+												axChanged(Spec,Ax,pred,EleFrom,EleTo,t), 
+												hasNumArgs(_,EleFrom,NA), hasNumArgs(_,EleTo,NA),
+												hasAxiom(Spec,Ax,t), ECNew = @renameEleAndGetNewEqClass(ECOld,pred,EleFrom,EleTo).												
+axHasEquivalenceClass(Spec,Ax,ECNew,t+1) :- axHasEquivalenceClass(Spec,Ax,ECOld,t), 
+												axChanged(Spec,Ax,sort,EleFrom,EleTo,t), 
+												hasAxiom(Spec,Ax,t), ECNew = @renameEleAndGetNewEqClass(ECOld,sort,EleFrom,EleTo).			
+
+
+%% ./64bit/clingo4 --number=0 --text iterationGeneralize-py.lp generalize.lp caslInterface.lp examples/AIJ-Paper/naturalsAndLists_sum_minimal.lp | grep ^axHasEquivalenceClass | sort -u | wc -l 
+%%Result:  476181
 
 %%%%%%%%% DEBUG OUTPUT %%%%%%%%%%%%%
-#show axChanged/6.
+%% #show removablePred/2.
+%% #show poss/3.
+%% #show axChanged/6.
 %% #show axHasEquivalenceClass/4.
-#show axHasEquivalenceClassAt/4.
-axHasEquivalenceClassAt(Spec,Ax,ECNew,2) :- axHasEquivalenceClass(Spec,Ax,ECNew,t), t = 2.
-axHasEquivalenceClassAt(Spec,Ax,ECNew,3) :- axHasEquivalenceClass(Spec,Ax,ECNew,t), t = 3.
+%% #show axHasEquivalenceClassAt/4.
+%% axHasEquivalenceClassAt(Spec,Ax,ECNew,2) :- axHasEquivalenceClass(Spec,Ax,ECNew,t), t = 2.
+%% axHasEquivalenceClassAt(Spec,Ax,ECNew,3) :- axHasEquivalenceClass(Spec,Ax,ECNew,t), t = 3.
 %% stepValueAtT(A,Spec,V) :- stepValue(A,Spec,V,t), t = 0, poss(A,Spec,t).
 %% #show stepValueAtT/3.
