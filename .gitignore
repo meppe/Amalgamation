@@ -1,10 +1,12 @@
 amalgamation.sublime-workspace
 blend.json
-Blend_v3234__G7_2_Bbmin_3_b_0.casl
 blendFiles.txt
 examples/demo_examples/tritone_demo.lp
 examples/demo_examples/tritone_demo_raw.casl
 examples/AIJ-Paper/naturalsAndLists_sum_minimal.lp
 examples/AIJ-Paper/naturalsAndLists_sum_minimal_raw.casl
-Blend_v82__Nat_9_List_0_b_0.casl
 log.tmp
+Blend_v*.casl
+*_raw.casl
+examples/AIJ-Paper/naturalsAndLists_fact_minimal.lp
+examples/AIJ-Paper/tritone_demo.lp

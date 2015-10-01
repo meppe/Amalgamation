@@ -40,39 +40,32 @@ def onModelGeneralize(model):
 
     print "Found generalisation:"
     modelStr = getModel(model)
+    print modelStr
     if generaliseOnly:
-        print modelStr
         return
     [blends,blendingGeneralizationValue] = findLeastGeneralizedBlends(model.atoms(), inputSpaces, highestValue, blends) 
     # print blendingGeneralizationValue  
     if blendingGeneralizationValue >= highestValue and blendingGeneralizationValue > -sys.maxint:
         highestValue = blendingGeneralizationValue
+        # print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
 
-        #writeBlends(blends)
-        jsonOutput = writeJsonOutput(blends,inputSpaceNames)
-
-        #print jsonOutput
-
-        blendJsonList = jsonOutput['blendList']
-       
-        for blendJson in blendJsonList:
-
-            os.system("rm blend.json")
-            outFile = open('blend.json',"w")
-            outFile.write(json.dumps(blendJson))
-            #print blendJson
-            outFile.close()
-            
-            print 'Other blend? (n) '
-            sys.stdout.flush()
-            x = raw_input()
-            
-            if x == 'n':
-               break;
-        print 'finished'
-        sys.stdout.flush()
-        #print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
-        # raw_input()
+        writeBlends(blends)
+        
+        # jsonOutput = writeJsonOutput(blends,inputSpaceNames)
+        # blendJsonList = jsonOutput['blendList']       
+        # for blendJson in blendJsonList:
+        #     os.system("rm blend.json")
+        #     outFile = open('blend.json',"w")
+        #     outFile.write(json.dumps(blendJson))
+        #     outFile.close()            
+        #     print 'Other blend? (n) '
+        #     sys.stdout.flush()
+        #     x = raw_input()            
+        #     if x == 'n':
+        #        break;
+        # print 'finished'
+        # sys.stdout.flush()
+        
 
 def getModel(model):
     print "%% Generalisation model is as follows : \n"

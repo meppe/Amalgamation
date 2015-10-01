@@ -24,7 +24,7 @@
 #program  base. 
 
 % The specification that provides the vocabulary is the one with the lowest id (for now). 
-specProvidesVocabulary(Spec1) :- spec(Spec1), hasId(Spec1,Id1), 0{spec(Spec2) : hasId(Spec2,Id2), Id2 > Id1}0.
+%% specProvidesVocabulary(Spec1) :- spec(Spec1), hasId(Spec1,Id1), 0{spec(Spec2) : hasId(Spec2,Id2), Id2 > Id1}0.
 
 %%%% Operator declaration %%%%
 
@@ -289,9 +289,6 @@ axEquivalent(Spec1,Ax1,Spec2,Ax2,t) :- 	hasAxiom(Spec1,Ax1,t), axHasEquivalenceC
 
 axHasEquivalenceClass(Spec,Ax,EC,t+1) :- axHasEquivalenceClass(Spec,Ax,EC,t), not axChanged(Spec,Ax,t), hasAxiom(Spec,Ax,t).
 
-%% axHasEquivalenceClass(Spec,Ax,ECNew,t+1) :- axHasEquivalenceClass(Spec,Ax,ECOld,t), 
-%% 												axChanged(Spec,Ax,Element,EleFrom,EleTo,t), 
-%% 												hasAxiom(Spec,Ax,t), ECNew = @renameEleAndGetNewEqClass(ECOld,Element,EleFrom,EleTo).
 
 axHasEquivalenceClass(Spec,Ax,ECNew,t+1) :- axHasEquivalenceClass(Spec,Ax,ECOld,t), 
 												axChanged(Spec,Ax,op,EleFrom,EleTo,t), 
@@ -306,9 +303,6 @@ axHasEquivalenceClass(Spec,Ax,ECNew,t+1) :- axHasEquivalenceClass(Spec,Ax,ECOld,
 												axChanged(Spec,Ax,sort,EleFrom,EleTo,t), 
 												hasAxiom(Spec,Ax,t), ECNew = @renameEleAndGetNewEqClass(ECOld,sort,EleFrom,EleTo).			
 
-
-%% ./64bit/clingo4 --number=0 --text iterationGeneralize-py.lp generalize.lp caslInterface.lp examples/AIJ-Paper/naturalsAndLists_sum_minimal.lp | grep ^axHasEquivalenceClass | sort -u | wc -l 
-%%Result:  476181
 
 %%%%%%%%% DEBUG OUTPUT %%%%%%%%%%%%%
 %% #show removablePred/2.

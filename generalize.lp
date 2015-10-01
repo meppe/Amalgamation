@@ -8,6 +8,8 @@
 
 %%% The base program is iteration independent. These are just some auxiliary predicates.
 #program  base. 
+%% num(-50..50).
+%% bigger(V1,V) :- V1 > V, num(V1), num(V).
 
 %%% Define steps
 #program cumulative(t).
@@ -16,8 +18,19 @@ s(t).
 %%% We have a total (or partial) priority order on predicates, operators and axioms, and generalisations should account for that order. Hence, we assign a cost to removal actions that coincides with the priority of the axiom, operator, predicate or sort to remove. This allows us to define when a generalisation action is optimal, i.e., when there is no cheaper action for which the preconditions are met.  Then we count the number of non-optimal generalisation operations as the number of operations that do not respect the priority order. This is used to prune the search space. 
 stepValue(A,Spec,-C,t)	 :- poss(A,Spec,t), cost(A,Spec,C).
 stepValue(A,Spec,V,t)	 :- poss(A,Spec,t), val(A,Spec,V).
-isOptimal(A1,Spec,t) 	 :- poss(A1,Spec,t), stepValue(A1,Spec,V1,t), 0{ a(A2,Spec) : poss(A2,Spec,t), stepValue(A2,Spec,V2,t), V2 > V1  }0.
-nonOptimalSteps(N,Spec,t) :- spec(Spec), N = {a(A,Spec) : exec(A,Spec,T),  not isOptimal(A,Spec,T), T <= t}.
+
+%% Count the number of non-optimal actions.
+%% These all slow things down heavily... Why is that? Hypothesis: its because of comparison ">".
+%% isOptimal(A1,Spec,t) 	 :- poss(A1,Spec,t), stepValue(A1,Spec,V1,t), 0{ a(A2,Spec) : poss(A2,Spec,t), stepValue(A2,Spec,V2,t), V2 > V1  }0.
+%% nonOptimalSteps(N,Spec,t) :- spec(Spec), N = {a(A,Spec) : exec(A,Spec,T),  not isOptimal(A,Spec,T), T <= t}.
+
+isGloballyOptimal(A1,Spec1,t) :- poss(A1,Spec1,t), stepValue(A1,Spec1,V1,t), 0{ a(A2,Spec2) : poss(A2,Spec2,t), stepValue(A2,Spec2,V2,t), V2 > V1  }0.
+%% nonGloballyOptimalSteps(N,t) :- N = {a(A,Spec) : exec(A,Spec,T),  not isGloballyOptimal(A,Spec,T), T <= t}.
+%% #show nonGloballyOptimalSteps/2.
+
+%% nonGloballyOptimalSteps(0,0).
+%% exActWithHigerValue(t) :- exec(A,Spec,t), stepValue(A,Spec,V,t), poss(A1,Spec1,t), stepValue(A1,Spec1,V1,t), V1 > V.
+%% nonGloballyOptimalSteps(V_old+1,t+1) :- nonGloballyOptimalSteps(V_old,t), exActWithHigerValue(t).
 
 notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1 != Spec2.
 
@@ -30,9 +43,9 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 %% This is much faster, but also much more restrictive, because it only allows optimal generalisations:
 %% 0{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
 %% This allows only one generalisation on one of the specifications at a time. 
-%% 1{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t).
+%% 1{exec(A,Spec,t) : a(A,Spec), poss(A,Spec,t)}1 :- notGenericReached(t).
 %% This allows only one generalisation on one of the specifications at a time, with necessity of optimal steps. Note that this sometimes leads to unsatisfiability. 
-1{exec(A,Spec,t) : poss(A,Spec,t)}1 :- notGenericReached(t).
+1{exec(A,Spec,t) : isGloballyOptimal(A,Spec,t), poss(A,Spec,t)}1 :- notGenericReached(t).
 
 %%%%%%%%%%%%%%%%%%%%
 %%% Testing Part %%%
@@ -45,6 +58,7 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 
 %% Speedup 2: Allow only a limited number on non-optimal steps. 
 %% :- nonOptimalSteps(N,Spec,t), N > 3.
+%% :- nonGloballyOptimalSteps(N,t), N > 0.
 
 %% Disable models where the generic space is not yet reached. The external atom query(t) is induced into the Logic Program externally in the iterationCore-py.lp main loop.
 #external query(t).

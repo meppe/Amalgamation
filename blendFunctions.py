@@ -15,16 +15,17 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
         minBlendValueToConsider = highestValue - int(float(highestValue) / float(100) * float(blendValuePercentageBelowHighestValueToKeep))
 
     # Parse model and execute actions on internal data structure to obtain the generalized inut spaces. 
-    genInputSpaces = getGeneralizedSpaces(modelAtoms, inputSpaces)
+    allowedCombis,genInputSpaces = getGeneralizedSpaces(modelAtoms, inputSpaces)
+
 
     # print "specs:"
     # print genInputSpaces.keys()
-    # for specTypeList in genInputSpaces.values():
-    #     for spec in specTypeList:
-    #         print spec.toCaslStr()
+    # for specGenList in genInputSpaces.values():
+    #     for specGen in specGenList:
+    #         print specGen.toCaslStr()
 
     # # Get possible combinations of generalization combinations
-    blendCombis = getBlendCombiCost(genInputSpaces)
+    blendCombis = getBlendCombiCost(allowedCombis,genInputSpaces)
 
     # # initialize output string for casl file
     cstr = ''
@@ -430,7 +431,9 @@ def writeBlends(blends):
         fileListFile.close()
 
 # Returns an array of possible Blend combinations and provides a blend value for the combination
-def getBlendCombiCost(genInputSpaces):
+def getBlendCombiCost(allowedCombis,genInputSpaces):
+    global singleGenPerStep
+    # print genSteps
     # combis maps costs to a list of combinations of generalised input spaces.
     combis = {}
     for specName1 in genInputSpaces.keys():
@@ -441,15 +444,19 @@ def getBlendCombiCost(genInputSpaces):
                 continue
             if specName1 == specName2:
                 continue
-            # print "specs: " + specName1 + specName2
+            # print "specs: " + specName1 + " and " + specName2
 
-            gs1Ctr = 0
+            gs1Ctr = 0            
             for genSpace1 in genInputSpaces[specName1]:
                 gs2Ctr = 0
                 for genSpace2 in genInputSpaces[specName2]:
                     combi = {}
                     combi[toLPName(specName1,"spec")] =  gs1Ctr
                     combi[toLPName(specName2,"spec")] =  gs2Ctr
+                    if singleGenPerStep:
+                        if combi not in allowedCombis:
+                            gs2Ctr = gs2Ctr + 1
+                            continue
                     informationValue = genSpace1.infoValue + genSpace2.infoValue
                     compressionValue = genSpace1.compressionValue + genSpace2.compressionValue
                     balancePenalty = int(abs(genSpace1.infoValue - genSpace2.infoValue)/2)
@@ -457,14 +464,15 @@ def getBlendCombiCost(genInputSpaces):
                     if value not in combis.keys():
                         combis[value] = []
                     combis[value].append(copy.deepcopy(combi))
-                    # print value
+                    
                     gs2Ctr = gs2Ctr + 1
                 gs1Ctr = gs1Ctr + 1
+
         # TODO: This only works for two input spaces.
         # Have to break here, because otherwise blends will be specified twice. I.e., the combi S1_5 and S2_3 plus the combi S2_3 and S1_5 will be produced.
         break
     # print "combis:"
-    # print combis[-30]
+    # print combis
     # exit(1)
     return combis
 

@@ -598,7 +598,11 @@ def parseXml(xmlFile):
 # Turn CASL specs in their internal data structure into a Logic Programming specification that is compatible with the ASP files. 
 def toLP(caslSpecs):
     lpStr = ""
+    isFirst = True
     for s in caslSpecs:
+        if isFirst:
+            lpStr = lpStr + "specProvidesVocabulary("+toLPName(s.name,"spec")+"). \n \n "
+            isFirst = False
         lpStr = lpStr + s.toLP()
         lpStr += "\n\n\n"
     
@@ -627,15 +631,17 @@ def getActFromAtom(a):
     return act
 
 def getGeneralizedSpaces(atoms, originalInputSpaces):
-
     inputSpaces = copy.deepcopy(originalInputSpaces)
     generalizations = {}
     lastSpecName = ''
     
+    allowedCombi = {}
     for spec in originalInputSpaces:
         generalizations[spec.name] = [spec]
         lastSpecName = spec.name
+        allowedCombi[toLPName(spec.name,"spec")] =  0
 
+    allowedCombis = [allowedCombi]
 
     # modify CASL data according to Answer Set atoms.
     acts = {}
@@ -649,12 +655,19 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
                 acts[act["step"]][act["iSpace"]] = []
             
             acts[act["step"]][act["iSpace"]].append(act)
-
+    genSteps = {}
     for step in sorted(acts.keys()):
+        genSteps[step] = []
         for iSpace in sorted(acts[step]):
+            lastAllowedCombi = allowedCombis[len(allowedCombis)-1]
+            thisAllowedCombi = copy.deepcopy(lastAllowedCombi)
+            for specName in thisAllowedCombi:
+                if specName == iSpace:
+                    thisAllowedCombi[specName] = thisAllowedCombi[specName] + 1
+                    allowedCombis.append(thisAllowedCombi)
             for cSpec in inputSpaces:
                 # remove operators, predicates and axioms
-                if toLPName(cSpec.name,"spec") == iSpace:  
+                if toLPName(cSpec.name,"spec") == iSpace:                      
                     newCompressionValue = 0
                     infoValue = 0
                     genCost = 0
@@ -694,14 +707,7 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
                             for ax in cSpec.axioms:
                                 newAxStr = re.sub("(?<!\w)"+lpToCaslStr(opFrom)+"(?!\w)", lpToCaslStr(opTo), ax.axStr)
                                 ax.axStr = newAxStr
-                        
-                        # if act["actType"] == "renamedToOp" :
-                            # opLPName = act["argVect"][0]
-                            # for op in cSpec.ops:
-                            #     if toLPName(op.name,"po") == opLPName:
-                            #         cSpec.compressionValue = cSpec.compressionValue + op.priority
-                            #         break
-                            
+                                                    
                         if act["actType"] == "rmPred" :
                             for p in cSpec.preds:
                                 if toLPName(p.name,"po") == act["argVect"][0]:
@@ -739,17 +745,6 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
                                 ax.axStr = newAxStr
                                 # ax.id = axMap[newAxStr]
                             
-                            # print "renaming predicate from " + lpToCaslStr(pFrom) + " to " + lpToCaslStr(pTo) + ". Press key..."
-                            # print cSpec.toCaslStr()
-                            # raw_input()
-
-                        # if act["actType"] == "renamedToPred" :
-                            # pLPName = act["argVect"][0]
-                            # for p in cSpec.preds:
-                            #     if toLPName(p.name,"po") == pLPName:
-                            #         cSpec.compressionValue = cSpec.compressionValue + p.priority
-                            #         break                                        
-
                         if act["actType"] == "rmSort" :
                             for srt in cSpec.sorts:
                                 if toLPName(srt.name,"sort") == act["argVect"][0]:
@@ -812,12 +807,6 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
                                     if pSort == lpToCaslStr(sFrom):
                                         p.args[n] = newSort.name
  
-                        # if act["actType"] == "renamedToSort" :
-                            # srtLPName = act["argVect"][0]
-                            # for srt in cSpec.sorts:
-                            #     if toLPName(srt.name,"sort") == srtLPName:
-                            #         cSpec.compressionValue = cSpec.compressionValue + srt.priority
-                            #         break          
 
                         ########################## BEGIN genSort     ########################## 
                         if act["actType"] == "genSort" :
@@ -868,6 +857,7 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
                     cSpec.compressionValue += newCompressionValue
                     thisCSpec = copy.deepcopy(cSpec)
                     thisCSpec.name = thisCSpec.name + "_gen_" + str(len(generalizations[thisCSpec.name]))
+                    genSteps[step].append(thisCSpec.name)
                     thisCSpec.totalSteps = step
                     generalizations[cSpec.name].append(thisCSpec)
 
@@ -876,15 +866,14 @@ def getGeneralizedSpaces(atoms, originalInputSpaces):
     genSpec.name = "Generic"
     generalizations["Generic"] = [genSpec]    
 
-    # Compute generalisation values for all specs. 
-
-    # compute infoValues
+    # Compute all infoValues
     for specList in generalizations.values():
         for spec in specList:
             spec.setInfoValue()             
-            print spec.toCaslStr()
-
-    return generalizations
+            # print spec.toCaslStr()
+    # print " allowed combis:"
+    # print allowedCombis
+    return allowedCombis,generalizations
 
 # This function works, but it should be more sophisticated and use logical equivalence instead of syntactic equality to check if axioms are equal. 
 def getNewAxIdOpRename(axId,op1,op2):
