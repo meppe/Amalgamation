@@ -1,0 +1,73 @@
+%% COINVENT House Boat example
+%% =================================
+%% ### Authors:
+%% - Manfred Eppe (meppe@iiia.csic.es)
+%% - Roberto Confalonieri (confalonieri@iiia.csic.es)
+%% This is the house boat example with several outcomes
+
+
+spec SemSys = 
+  sort PriorityDummySort
+  op prioDummyOp : PriorityDummySort
+
+end
+
+
+spec Symbols = SemSys then
+
+    free type Medium ::= land | water
+
+    sorts Agent Object
+    %% sort MovingObject < Object
+    %% sort StaticObject < Object
+    
+    ops on: Object -> Medium
+
+    preds moving : Object
+
+    forall o: Object . on(o)=water => moving(o) %(AxObjOnWaterMoving:p:-1)%
+end
+
+
+
+spec Boat = Symbols then
+
+    sort Boat < Object
+    sort Person < Agent
+    
+    ops
+        boat: Boat
+        passenger: Person
+    preds
+        ride: Person * Boat
+        
+    . ride(passenger,boat) 
+    . on(boat) = water %(AxOnBoat:p:2)%
+    . moving(boat)
+
+end
+
+
+spec House = Symbols then
+    sort House < Object
+    sort Person < Agent
+    
+    ops
+        house: House
+        resident: Person
+    preds
+        liveIn: Person * House
+
+    . liveIn(resident,house)
+    . on(house) = land %(AxOnHouse:p:2)%
+    . not moving(house) 
+end
+
+
+%% Outcomes should be (in order of blend value)
+%% Very high quality:
+%% 1) The HouseBoat, i.e., a house on the medium water
+%% Somewhat high quality:
+%% 2) The BoatHouse, i.e., a house where the inhabitant is a boat
+%% Quite low quality
+%% 3) The Boat that carries houses as passengers (a cargo-vessel for houses)

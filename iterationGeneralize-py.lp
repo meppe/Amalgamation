@@ -49,7 +49,7 @@ def onModelGeneralize(model):
         highestValue = blendingGeneralizationValue
         # print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
 
-        writeBlends(blends)
+        # writeBlends(blends)
         
         # jsonOutput = writeJsonOutput(blends,inputSpaceNames)
         # blendJsonList = jsonOutput['blendList']       
@@ -82,6 +82,8 @@ def main(prg):
     
     ## Prepare internal data structure for the later blending. 
     global inputSpaceNames, inputSpaces, inputFile
+
+    global blends
     
     print "Starting main iteration loop. Reading input spaces."
 
@@ -135,5 +137,6 @@ def main(prg):
         if stepGeneralize >= (imin-1) and (ret == SolveResult.SAT): break
         stepGeneralize = stepGeneralize+1
 
+    writeBlends(blends)
 
 #end.

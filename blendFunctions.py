@@ -47,9 +47,8 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
             specTo = spec
             specFrom = genInputSpaces["Generic"][0]
             renamings = getRenamingsFromModelAtoms(modelAtoms,specFrom,specTo,specName)
-            # print mappingStr
-            # print renamings
             
+            # print renamings            
 
             if len(renamings.keys()) > 0:
                 mappingStr += " =  "
@@ -103,7 +102,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
         if tries > 5:
             print "ERROR! file amalgamTmp.casl not yet written after "+ str(tries) + "tries. Aborting program... "
             exit(1)
-    # raw_input()
+    
     generalizationValue = -sys.maxint-1
     consistentFound = False
     for value in sorted(blendCombis.keys(),reverse=True):
@@ -363,7 +362,7 @@ def generateBlend(blend):
     return explicitBlendStr
 
 
-# This function takes a list of blend speciications and writes them to disk.
+# This function takes a list of blend specifications and writes them to disk.
 def writeBlends(blends):
     global genExplicitBlendFiles
     # raw_input
@@ -571,9 +570,8 @@ def checkConsistencyDarwin(blendTptpName) :
         return cVal
 
 def getRenamingsFromModelAtoms(modelAtoms,specFrom,specTo,origCaslSpecName):
-    # global inputSpaces
-    # spec = inputSpaces[caslSpecName]
     renamings = {}
+
     for atom in modelAtoms:
         a = str(atom)
         if a[:4] == "exec":
@@ -598,7 +596,7 @@ def getRenamingsFromModelAtoms(modelAtoms,specFrom,specTo,origCaslSpecName):
                     renamings[act["step"]] = act["argVect"]
             
             if act["actType"] == "renamePred":               
-                # Add renaming only if operator is in target spec.
+                # Add renaming only if predicate is in target spec.
                 rnToExists = False
                 for p in specTo.preds:                        
                     if act["argVect"][0] == toLPName(p.name,"po"): 
@@ -613,17 +611,24 @@ def getRenamingsFromModelAtoms(modelAtoms,specFrom,specTo,origCaslSpecName):
                     renamings[act["step"]] = act["argVect"]
             
             if act["actType"] == "renameSort":                
-                # Add renaming only if operator is in target spec.
-                rnToExists = False
+                # Add renaming only if sort is in target spec.
+                rnToExistsInSpecTo = False
                 for s in specTo.sorts:                        
                     if act["argVect"][0] == toLPName(s.name,"sort"): 
-                        rnToExists = True
+                        rnToExistsInSpecTo = True
                         break
-                rnFromExists = False
+                rnFromExistsInSpecFrom = False
                 for s in specFrom.sorts:                        
                     if act["argVect"][1] == toLPName(s.name,"sort"): 
-                        rnFromExists = True
+                        rnFromExistsInSpecFrom = True
                         break
-                if rnToExists and rnFromExists:  
+                rnFromExistsInSpecTo = False
+                for s in specTo.sorts:                        
+                    if act["argVect"][1] == toLPName(s.name,"sort"): 
+                        rnFromExistsInSpecTo = True
+                        break
+
+                if rnToExistsInSpecTo==True and rnFromExistsInSpecFrom==True and rnFromExistsInSpecTo==False:  
                     renamings[act["step"]] = act["argVect"]
+    
     return renamings

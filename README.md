@@ -55,5 +55,6 @@ If you look at the settings.py, you'll also find a cadence fusion example to obt
 	- Logical Equivalence of axioms is currently determined by syntactic equivalence. This is of course a much stronger form of equivalence and a serious limitation of the system.
 	- IMPORTANT (from category theoretical point of view): If predicates or operator names are equal in different input specifications, they are considered to be equal. 
 	- 0-ary predicates currently cause unpredictable behavior and are not supported.
+	- There is an unexpected (yet probably correct) behavior by the colimit, which messes up with the value computation of blends. In the colimit, 
 
 

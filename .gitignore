@@ -10,3 +10,5 @@ Blend_v*.casl
 *_raw.casl
 examples/AIJ-Paper/naturalsAndLists_fact_minimal.lp
 examples/AIJ-Paper/tritone_demo.lp
+amalgamTmp.casl
+HouseBoat.lp
