@@ -6,7 +6,7 @@ inputFile = "examples/minimal.casl"
 inputSpaceNames = ["S1","S2"]
 
 ###### The number of models to be generated (0 for all models)
-numModels = 20
+numModels = 1
 
 ###### The minimal number of iterations for generalization
 minIterationsGeneralize = 1
@@ -15,7 +15,7 @@ minIterationsGeneralize = 1
 maxIterationsGeneralize = 20
 
 ###### Percentage of blend value below the currently highest value found so far that we want to keep in the results. 0 means that we only keep the blends with the highest value found so far, 100 means to consider all blends.
-blendValuePercentageBelowHighestValueToKeep = 33
+blendValuePercentageBelowHighestValueToKeep = 10
 
 ###### Time limit for eprover and darwin consistency check in seconds CPU time
 eproverTimeLimit = 4
@@ -69,6 +69,6 @@ generaliseOnly = False
 # inputFile = "examples/AIJ-paper/naturalsAndLists_fact_minimal.casl"
 # inputSpaceNames = ["List","Nat"]
 
-inputFile = "examples/AIJ-paper/HouseBoat.casl"
+inputFile = "examples/AIJ-paper/HouseBoat_GoguenWebsite.casl"
 inputSpaceNames = ["House","Boat"]
 

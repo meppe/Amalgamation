@@ -8,88 +8,123 @@ import json
 
 def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
     global blendValuePercentageBelowMinToKeep
-    # generalizationCost = sys.maxint
+
     if highestValue == -sys.maxint:
         minBlendValueToConsider = -sys.maxint
     else:
         minBlendValueToConsider = highestValue - int(float(highestValue) / float(100) * float(blendValuePercentageBelowHighestValueToKeep))
 
-    # Parse model and execute actions on internal data structure to obtain the generalized inut spaces. 
-    allowedCombis,genInputSpaces = getGeneralizedSpaces(modelAtoms, inputSpaces)
-
-
-    # print "specs:"
-    # print genInputSpaces.keys()
-    # for specGenList in genInputSpaces.values():
-    #     for specGen in specGenList:
-    #         print specGen.toCaslStr()
-
-    # # Get possible combinations of generalization combinations
-    blendCombis = getBlendCombiCost(allowedCombis,genInputSpaces)
+    genInputSpaceTuples = getGeneralisedSpaceTuples(modelAtoms, inputSpaces)
 
     # # initialize output string for casl file
-    cstr = ''
+    cstr = '%% Temporary CASL File to decide consistency of blends\n\n\n'
+    specRenamings = {}
+    lastSpecs = {}
+    blendNames = {}
+    for spaceTuple in genInputSpaceTuples:
+        for specName,spec in spaceTuple.specs.iteritems():
+            lastSpecs[specName] = "Generic"
+            specRenamings[specName] = ""
+        break
 
-    # # First state generic spaces
-    cstr = cstr + genInputSpaces["Generic"][0].toCaslStr()+"\n\n"
+    genInputSpaceTuples.reverse()
+    # Before iterating in reverse order over all generalisations (starting from the most generalised specs), create the generic space as a copy of  of the most generalised specs (which are all equal, except for their compression value).     
+    for spaceTuple in genInputSpaceTuples:
+        for specName,spec in spaceTuple.specs.iteritems():
+            generic = copy.deepcopy(spec)
+            generic.lastGenAction = {}
+            generic.nextGenAction = {}
+            generic.name = "Generic"
+            generic.compressionValue = -1
+            cstr += generic.toCaslStr()+"\n\n"
+            break
+        break
 
-    # State the mappings with inheritance        
-    for specName in genInputSpaces.keys():
-        if specName == "Generic":            
-            continue
+    # Now iterate over all generalisation tuples. 
+    for spaceTuple in genInputSpaceTuples:
+        for specName,spec in spaceTuple.specs.iteritems():
+            # Only specify this spec if it has not been specified already.              
+            if spec.name != lastSpecs[specName]:
+                # Inherit everything from last spec
+                lastSpecName = lastSpecs[specName]
+                if lastSpecName[:5] == "spec_":
+                    lastSpecName = lastSpecName[5:]
+                specStr = "spec " + spec.name[5:] + " = " + lastSpecName
+                
+                # Depending on the action type, write mapping (renamings and sort generalisation) or add elements (removal)
+                genAction =  spaceTuple.nextGenAction
+                if "actType" in genAction.keys():
+                    # print "The generalisation action to reach " + spec.name + " is: "
+                    # print genAction
+                    if genAction["actType"] in ["renamePred","renameSort","renameOp","genSort"]:
+                        renaming = lpToCaslStr(genAction['argVect'][1]) + " |-> " + lpToCaslStr(genAction['argVect'][0])
+                        specStr += " with " +  renaming
+                        if specRenamings[specName] != "":
+                            specRenamings[specName] += ", "
+                        specRenamings[specName] += renaming
 
-        for spec in genInputSpaces[specName]:
-            
-            specStr = spec.toCaslStr()+"\n\n"
+                    if genAction["actType"] in ["rmPred","rmOp","rmSort","rmAx"]:    
+                        specStr += " then\n "
+                    if genAction["actType"] == "rmPred":
+                        predName = genAction['argVect'][0][3:]
+                        for p in spec.preds:
+                            if predName == p.name:
+                                specStr = specStr + p.toCaslStr()
+                                break
+                    if genAction["actType"] == "rmOp":
+                        opName = genAction['argVect'][0][3:]
+                        for op in spec.ops:
+                            if opName == op.name:
+                                specStr = specStr + op.toCaslStr()
+                                break
+                    if genAction["actType"] == "rmSort":
+                        sName = genAction['argVect'][0][5:]
+                        for s in spec.sorts:
+                            if sName == s.name:
+                                specStr = specStr + s.toCaslStr()
+                                break
+                    if genAction["actType"] == "rmAx":
+                        axId = genAction['argVect'][0]
+                        print "axioms:"
+                        for ax in spec.axioms:
+                            print ax.toCaslStr()
+                            if axId == str(ax.id):
+                                specStr = specStr + ax.toCaslStr()
+                                break
 
-            mappingStr = ""
-            mappingStr = mappingStr + "view GenTo"+spec.name+" : Generic to "+spec.name+" \n"
-            specTo = spec
-            specFrom = genInputSpaces["Generic"][0]
-            renamings = getRenamingsFromModelAtoms(modelAtoms,specFrom,specTo,specName)
-            
-            # print renamings            
+                specStr = specStr + "\nend \n\n"
+                    
+                # The mapping should be fully identifiable by HETS due to inheritance, so we don't need to  provide the mappings explicitly. 
+                mapFromGenericStr = "view GenTo"+spec.name[5:]+" : Generic to "+spec.name[5:]
+                if specRenamings[specName] != "":
+                    mapFromGenericStr += " = " 
+                mapFromGenericStr += specRenamings[specName] + " \nend \n \n"
+                    
+                lastSpecs[specName] = spec.name
+                cstr = cstr + specStr + mapFromGenericStr
 
-            if len(renamings.keys()) > 0:
-                mappingStr += " =  "
-                for step in sorted(renamings.keys()):
-                    mappingStr = mappingStr + lpToCaslStr(renamings[step][1]) + " |-> " + lpToCaslStr(renamings[step][0]) + ", "
-                mappingStr = mappingStr[:-2]
-
-                    # print act
-                # if atom.find("exec(renameOp(") != -1:
-                    # atomSpec = 
-            mappingStr = mappingStr + " end\n\n"
-            cstr += specStr + mappingStr
-    
-    # raw_input()
-    # State blends (colimit operation)
-    for value in sorted(blendCombis.keys(),reverse=True):
+        # State blends (colimit operation)
+        value = spaceTuple.getBlendValue()
+        # for value in sorted(blendCombis.keys(),reverse=True):
+        # print "value of blend: " + str(value) + " -- minValue: "  + str(minBlendValueToConsider)
         if value < minBlendValueToConsider:
             continue
+        if value not in blendNames.keys():
+            blendNames[value] = []
         print "Specifying blends with generalization value of " + str(value) 
-        for combi in blendCombis[value]:            
-            cstr = cstr + "spec Blend" + "_v"+str(value)+ "_"
-            for specName in combi.keys():
-                steps = combi[specName]
-                cstr = cstr + "_" + lpToCaslStr(specName) + "_" + str(steps)
-            cstr = cstr + " = combine "
-
-            for specName in combi.keys():
-                caslSpecName = lpToCaslStr(specName)
-                specList = genInputSpaces[caslSpecName]
-                # print specName
-                # print combi
-                # print int(combi[specName])
-                # print len(specList)
-                specStep = int(combi[specName])
-                spec = specList[specStep]
-                cstr = cstr + "GenTo"+spec.name+","
-            cstr = cstr[:-1]
-            cstr = cstr + " end\n\n"
-    
-    # print cstr
-    # First make sure file does not exists, and then write file. Try writing multiple times (this is necessary due to some strange file writing bug...)
+          
+        blendName =   "Blend" + "_v"+str(value)+ "_"                
+        for specName,spec in spaceTuple.specs.iteritems():
+            steps = spec.generalisationSteps
+            blendName += "_" + specName + "_" + str(steps)
+        cstr = cstr + "spec " + blendName
+        blendNames[value].append(blendName)
+        cstr = cstr + " = combine "
+        for specName,spec in spaceTuple.specs.iteritems():            
+            cstr = cstr + "GenTo"+spec.name[5:]+","
+        cstr = cstr[:-1]
+        cstr = cstr + " end\n\n"
+        
     if os.path.isfile("amalgamTmp.casl"):
         os.system("rm amalgamTmp.casl")
 
@@ -102,39 +137,26 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
         if tries > 5:
             print "ERROR! file amalgamTmp.casl not yet written after "+ str(tries) + "tries. Aborting program... "
             exit(1)
-    
+
     generalizationValue = -sys.maxint-1
     consistentFound = False
-    for value in sorted(blendCombis.keys(),reverse=True):
-        
+    for value in sorted(blendNames.keys(),reverse=True):
         print "Trying blends with generalization value of " + str(value)
         if value < minBlendValueToConsider:
             print "value "  +str(value) + " < " + str(minBlendValueToConsider) + " too low, aborting..."
             break
 
-        # TODO: do not blend if generic space is reached. 
-        # isBestBlendCost = False
-        for combi in blendCombis[value]:   
-            # thisCombiConsistent = -1
-            blendName = "Blend"  + "_v"+str(value)+ "_"
-            for specName in combi.keys():
-                step = combi[specName]
-                blendName = blendName + "_" + lpToCaslStr(specName) + "_" + str(step)
-            # blendName += "-v"+str(value)
-
+        for blendName in blendNames[value]:   
             print "Checking consistency of " + blendName + ""
             #generate tptp format of theory and call eprover to check consistency
             blendTptpName = "amalgamTmp_"+blendName+".tptp"
             tries = 0
-
             # Try to generate input files several times. This is neccesary due to strange file writing bug. 
             while True:
-
                 if os.path.isfile(blendTptpName):
                      blendFileSize = os.stat(blendTptpName).st_size
                 else: 
-                    blendFileSize = 0
-                
+                    blendFileSize = 0                
                 if blendFileSize != 0:
                     break
                 
@@ -152,104 +174,48 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
 
                         
             # if thisCombiConsistent == 1: # If we can show that the blend is consistent
-            if thisCombiConsistent != 0: # If we can not show that the blend is inconsistent
-                
-                prettyBlendStr = prettyPrintBlend(genInputSpaces,combi,modelAtoms)
-                blendInfo = {"combi" : combi, "prettyHetsStr" : prettyBlendStr, "blendName" : blendName, "generalizationValue" : value}
-                
-                
+            if thisCombiConsistent != 0: # If we can not show that the blend is inconsistent                
+                prettyBlendStr = prettyPrintBlend2(blendName, cstr)
+                combi = {}
+                combiParts = blendName.split("__")[1].split("_")
+                i = 0
+                while i < len(combiParts):
+                    combi[toLPName(combiParts[i],'spec')] = combiParts[i+1]
+                    i += 2
 
-                # consistentFound = True
+                blendInfo = {"combi": combi, "prettyHetsStr" : prettyBlendStr, "blendName" : blendName, "value" : value}
+                consistentFound = True
                 # If a better blend was found, delete all previous blends. 
                 if value > highestValue:
-                    #print 'tptpfile name is '+blendTptpName;
-                    
-        
                     highestValue = value
                     minBlendValueToConsider = highestValue - int(float(highestValue) / float(100) * float(blendValuePercentageBelowHighestValueToKeep))
                     print "New best value: " + str(value) + ". Resetting global list of blends and keeping only blends with a value of at least " + str(minBlendValueToConsider) + ", i.e., " + str(blendValuePercentageBelowHighestValueToKeep) + "% below new highest value of " + str(highestValue) + "."
                     newBlends = []
-                    # raw_input()
                     for blend in blends:
-                        if blend['generalizationValue'] >= minBlendValueToConsider:
+                        if blend['value'] >= minBlendValueToConsider:
                             newBlends.append(blend) 
-                    blends = newBlends
-                    
+                    blends = newBlends                    
                 blends.append(blendInfo)
 
     os.system("rm *.tptp")
     os.remove("amalgamTmp.casl")
     
     return [blends,highestValue]
-    
-def prettyPrintBlend(genInputSpaces,combi,modelAtoms):
 
-    print "Pretty printing blend"
+def prettyPrintBlend2(blendName, cstr):
+    prettyPrintStr = ''
+    lines = cstr.split("\n")
+    # Just remove all lines that specifiy blends which is not the blend in question. 
+    for line in lines:
+        if line[:10] != "spec Blend":
+            prettyPrintStr += line + "\n"
+        if line.find(blendName) != -1:
+            blendStr = line.split("= combine")[1]
+            blendStr = "spec Blend = combine " + blendStr
+            prettyPrintStr += blendStr + "\n"
+    return prettyPrintStr
 
-    lastSpecs = {}
 
-    # state generic space
-    cstr = genInputSpaces["Generic"][0].toCaslStr()+"\n\n"
-
-    # initiate blend spec string
-    blendStr =  "spec Blend = combine "
-    for iSpaceName in genInputSpaces.keys():
-        if iSpaceName == "Generic":
-            continue
-        lastSpecName = ''
-        lastSpec = None
-        numGeneralizations = 0
-        
-        for spec in genInputSpaces[iSpaceName]:
-            cstr += "%% Spec values: \n%% Information value: "
-            cstr += str(spec.infoValue)
-            cstr += "\n%% Compression value: "
-            cstr += str(spec.compressionValue) + "\n"
-            
-            cstr += spec.toCaslStr()+"\n\n"
-            # define view to previous spec. 
-            viewToPrevSpecStr = ''
-            if lastSpecName != '':
-                viewToPrevSpecStr =  "view "+spec.name+"To"+lastSpecName+" : " + spec.name + " to " +lastSpecName 
-                renamings = getRenamingsFromModelAtoms(modelAtoms,spec,lastSpec,iSpaceName)
-                if len(renamings.keys()) > 0:
-                    viewToPrevSpecStr += " =  "
-                    for step in sorted(renamings.keys()):
-                        renameFrom = lpToCaslStr(renamings[step][1])
-                        renameTo = lpToCaslStr(renamings[step][0])
-                        viewToPrevSpecStr += renameFrom + " |-> " + renameTo + ", "
-                    viewToPrevSpecStr = viewToPrevSpecStr[:-2]
-                viewToPrevSpecStr += " end \n\n"
-                cstr += viewToPrevSpecStr
-
-            lastSpecName = spec.name
-            lastSpec = spec
-            # The most general input space has been found
-            if numGeneralizations == combi[toLPName(iSpaceName,"spec")]:
-                # view from generic space to generalized input space:
-                cstr = cstr + "view GenTo"+lastSpecName+" : Generic to " + lastSpecName
-                specFrom = genInputSpaces["Generic"][0]
-                renamings = getRenamingsFromModelAtoms(modelAtoms,specFrom,spec,iSpaceName)
-                if len(renamings.keys()) > 0:
-                    cstr = cstr + " =  "
-                    for step in sorted(renamings.keys()):
-                        cstr = cstr + lpToCaslStr(renamings[step][1]) + " |-> " + lpToCaslStr(renamings[step][0]) + ", "
-                    cstr = cstr[:-2]
-
-                cstr += " end \n\n"
-                # Specify blend
-                blendStr = blendStr + "GenTo"+spec.name+","
-                break
-            numGeneralizations = numGeneralizations + 1
-            
-        
-    blendStr = blendStr[:-1] + " end\n\n"
-
-    cstr = cstr + blendStr
-
-    print "End Pretty printing blend"
-
-    return cstr
 
 def writeJsonOutput(blends,inputSpaceNames):
 
@@ -267,7 +233,7 @@ def writeJsonOutput(blends,inputSpaceNames):
         genericSpacePattern = "(spec\sGeneric.*?end)"
         jsonBlend['blendId'] = str(blendNr)
         jsonBlend['blendName'] = blend['blendName']
-        jsonBlend['cost'] = blend['generalizationValue']
+        jsonBlend['cost'] = blend['value']
         match = re.search(genericSpacePattern,blendStr,re.DOTALL)
         jsonBlend['genericSpace'] = match.group(0)
         
@@ -429,79 +395,6 @@ def writeBlends(blends):
         fileListFile.write(blendFilesList)
         fileListFile.close()
 
-# Returns an array of possible Blend combinations and provides a blend value for the combination
-def getBlendCombiCost(allowedCombis,genInputSpaces):
-    global singleGenPerStep
-    # print genSteps
-    # combis maps costs to a list of combinations of generalised input spaces.
-    combis = {}
-    for specName1 in genInputSpaces.keys():
-        if specName1 == "Generic":
-            continue
-        for specName2 in genInputSpaces.keys():
-            if specName2 == "Generic":
-                continue
-            if specName1 == specName2:
-                continue
-            # print "specs: " + specName1 + " and " + specName2
-
-            gs1Ctr = 0            
-            for genSpace1 in genInputSpaces[specName1]:
-                gs2Ctr = 0
-                for genSpace2 in genInputSpaces[specName2]:
-                    combi = {}
-                    combi[toLPName(specName1,"spec")] =  gs1Ctr
-                    combi[toLPName(specName2,"spec")] =  gs2Ctr
-                    if singleGenPerStep:
-                        if combi not in allowedCombis:
-                            gs2Ctr = gs2Ctr + 1
-                            continue
-                    informationValue = genSpace1.infoValue + genSpace2.infoValue
-                    compressionValue = genSpace1.compressionValue + genSpace2.compressionValue
-                    balancePenalty = int(abs(genSpace1.infoValue - genSpace2.infoValue)/2)
-                    value = compressionValue + informationValue - balancePenalty
-                    if value not in combis.keys():
-                        combis[value] = []
-                    combis[value].append(copy.deepcopy(combi))
-                    
-                    gs2Ctr = gs2Ctr + 1
-                gs1Ctr = gs1Ctr + 1
-
-        # TODO: This only works for two input spaces.
-        # Have to break here, because otherwise blends will be specified twice. I.e., the combi S1_5 and S2_3 plus the combi S2_3 and S1_5 will be produced.
-        break
-    # print "combis:"
-    # print combis
-    # exit(1)
-    return combis
-
-
-
-
-
-
-# Returns an array of possible Blend combinations and provides a generalization cost value for the combination
-# def getPossBlendCombis(modelAtoms):
-#     # maxGeneralizationsPerSpace = 0
-#     combis = {}
-#     for atom in modelAtoms:
-#         if str(atom).find("combinedGenCost") != 0:
-#             continue
-#         # combi is a pair of generalised specification names
-#         combi = {}
-#         # combinedGenCost(spec_Boat,6,spec_House,2,38,7).
-#         argItems = str(atom).split("(")[1].split(")")[0].split(",")
-#         # print argItems
-#         combi[argItems[0]] = int(argItems[1])-1
-#         combi[argItems[2]] = int(argItems[3])-1
-#         # cost is the cost of the combination
-#         cost = int(argItems[4])
-#         if cost not in combis.keys():
-#             combis[cost] = []
-#         if combi not in combis[cost]:
-#             combis[cost].append(combi)
-#     return combis
-
 def checkConsistency(blendTptpName):
     consistent = checkConsistencyEprover(blendTptpName)
 
@@ -569,66 +462,4 @@ def checkConsistencyDarwin(blendTptpName) :
 
         return cVal
 
-def getRenamingsFromModelAtoms(modelAtoms,specFrom,specTo,origCaslSpecName):
-    renamings = {}
 
-    for atom in modelAtoms:
-        a = str(atom)
-        if a[:4] == "exec":
-            act = getActFromAtom(a)
-            if act["iSpace"] != toLPName(origCaslSpecName,"spec"):
-                continue
-            
-            if act["actType"] == "renameOp":
-                # print "renameOp happens"
-                # Add renaming only if operator is in target spec.
-                rnToExists = False
-                for op in specTo.ops:                        
-                    if act["argVect"][0] == toLPName(op.name,"po"): 
-                        rnToExists = True
-                        break
-                rnFromExists = False
-                for op in specFrom.ops:                        
-                    if act["argVect"][1] == toLPName(op.name,"po"): 
-                        rnFromExists = True
-                        break
-                if rnToExists and rnFromExists: 
-                    renamings[act["step"]] = act["argVect"]
-            
-            if act["actType"] == "renamePred":               
-                # Add renaming only if predicate is in target spec.
-                rnToExists = False
-                for p in specTo.preds:                        
-                    if act["argVect"][0] == toLPName(p.name,"po"): 
-                        rnToExists = True
-                        break
-                rnFromExists = False
-                for p in specFrom.preds:                        
-                    if act["argVect"][1] == toLPName(p.name,"po"): 
-                        rnFromExists = True
-                        break
-                if rnToExists and rnFromExists: 
-                    renamings[act["step"]] = act["argVect"]
-            
-            if act["actType"] == "renameSort":                
-                # Add renaming only if sort is in target spec.
-                rnToExistsInSpecTo = False
-                for s in specTo.sorts:                        
-                    if act["argVect"][0] == toLPName(s.name,"sort"): 
-                        rnToExistsInSpecTo = True
-                        break
-                rnFromExistsInSpecFrom = False
-                for s in specFrom.sorts:                        
-                    if act["argVect"][1] == toLPName(s.name,"sort"): 
-                        rnFromExistsInSpecFrom = True
-                        break
-                rnFromExistsInSpecTo = False
-                for s in specTo.sorts:                        
-                    if act["argVect"][1] == toLPName(s.name,"sort"): 
-                        rnFromExistsInSpecTo = True
-                        break
-
-                if rnToExistsInSpecTo==True and rnFromExistsInSpecFrom==True and rnFromExistsInSpecTo==False:  
-                    renamings[act["step"]] = act["argVect"]
-    
-    return renamings

@@ -55,6 +55,6 @@ If you look at the settings.py, you'll also find a cadence fusion example to obt
 	- Logical Equivalence of axioms is currently determined by syntactic equivalence. This is of course a much stronger form of equivalence and a serious limitation of the system.
 	- IMPORTANT (from category theoretical point of view): If predicates or operator names are equal in different input specifications, they are considered to be equal. 
 	- 0-ary predicates currently cause unpredictable behavior and are not supported.
-	- There is an unexpected (yet probably correct) behavior by the colimit, which messes up with the value computation of blends. In the colimit, 
+	- There is an unexpected (yet probably correct) behavior by the colimit, which messes up with the value computation of blends. In the colimit, different operators with the same sorts may be blended and at the same time renamed. This happens in commit 0bbd423 from 2nd Oct. 2015: E.G. consider Blend Blend_v28__House_2_Boat_3_b_42.casl. this is identical to a blend with a higher value, namely Blend_v30__House_2_Boat_4_b_60.casl. This should not be the case. It has something to do with the gray arrow from the input space to the blend in the HETS diagram. 
 
 
