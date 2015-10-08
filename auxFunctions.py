@@ -13,11 +13,14 @@ def toLPName(caslName,elemType):
     return caslName
 
 def lpToCaslStr(lpName):
-    uScorePos = lpName.find("_")
-    if uScorePos == -1:
-        print "Error, lpname invalid"
-        exit(1)
-    return lpName[uScorePos+1:]
+    allowedPrefixes = ["po_","sort_","spec_"]
+    
+    for prefix in allowedPrefixes:
+        if lpName.find(prefix) == 0:
+            return lpName[len(prefix):]
+     
+    print "Error, lpname invalid: " + lpName
+    exit(1)
 
 class Command(object):
     """

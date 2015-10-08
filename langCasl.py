@@ -5,8 +5,9 @@ import copy
 import time
 from string import *
 import re
-from settings import *
+from decimal import *
 
+from settings import *
 from auxFunctions import *
 import requests
 
@@ -240,16 +241,13 @@ class CaslSpec:
         self.axioms = []
         self.id = 0
         self.generalisationSteps = 0
-        # self.totalSteps = 0       # This is the total number of parallel generalisations applied on all input specifications so far. 
-        # self.thisStep = 0       # This is the number of generalisation operations applied on only this spec so far. 
-        # self.genCost = 0    # this represented the amount of information that is removed from an input specification. It is currently not needed, but we might want to use it in the future. 
         self.infoValue = 0 # This is the amount of information left in a specification
-        self.compressionValue = 0 # This is the amount of information that was `merged' between all input spaces at the current level, by renaming operators, sorts and predicates. 
+        # self.compressionValue = 0 # This is the amount of information that was `merged' between all input spaces at the current level, by renaming operators, sorts and predicates. 
 
     def toCaslStr(self):
         # caslStr = "CaslSpec:\n"
         caslStr = "spec "
-        caslStr = caslStr +  self.name +" = %% InfoValue: " + str(self.infoValue) + " -- CompressionValue: " + str(self.compressionValue) + "\n"
+        caslStr = caslStr +  self.name +" = %% InfoValue: " + str(self.infoValue) + "\n"
         for s in self.sorts: 
             if s.name == "PriorityDummySort":
                 continue
@@ -311,21 +309,17 @@ class CaslSpec:
         for sort in self.sorts:
             if sort.priority > 0:
                 self.infoValue = sort.priority + self.infoValue
-                # print "Adding infoValue" + str(sort.priority) + " for sort " + sort.name
-        # print "Sorts Set info value to " + str(self.infoValue)
         for op in self.ops:
             if op.priority > 0:
                 self.infoValue = op.priority + self.infoValue
-        # print "Ops Set info value to " + str(self.infoValue)
         for pred in self.preds:
             if pred.priority > 0:
                 self.infoValue = pred.priority + self.infoValue
-        # print "Preds Set info value to " + str(self.infoValue)
         for ax in self.axioms:
             if ax.priority > 0:
                 self.infoValue = ax.priority  + self.infoValue
-        # print "Ax Set info value to " + str(self.infoValue)
-        # raw_input()
+        ## Now multiply info value with 100 to allow for more precise computation of blend values
+        self.infoValue *= 100
 
 ## This class represents casl specs as nodes in a directed labeled graph that represents the generalisation tree
 class CaslSpecTreeNode(CaslSpec):
@@ -341,8 +335,11 @@ class GeneralisedCaslSpecTuple():
         self.nextGenAction = {}
         self.specs = specs
         self.compressionValue = 0
-    def toStr(self):
-        print "Generalisation tuple with compression value " + str(self.compressionValue)
+    def printInfo(self):
+        print "Generalisation tuple"
+        for specname,spec in self.specs.iteritems():
+            print specname
+        print "Compression value: " + str(self.compressionValue)
         print "Action:"
         print self.lastGenAction
         print "Specs:"
@@ -356,13 +353,18 @@ class GeneralisedCaslSpecTuple():
         return informationValue
 
     def getBalancePenalty(self):
-        avgInformationValue = self.getInfoValue() / len(self.specs.keys())        
+        avgInformationValue = self.getInfoValue() / len(self.specs.keys())
+        # print "average info value is " + str(self.getInfoValue() ) + "/" + str(len(self.specs.keys())) + "=" + str(avgInformationValue)
         balPenalty = 0
         for specname,spec in self.specs.iteritems():
             balPenalty = balPenalty + abs(spec.infoValue - avgInformationValue)
-        return int(balPenalty)
+        balPenalty /= 2
+        return balPenalty
 
     def getBlendValue(self):
+        # print "getting blend value of tuple" 
+        # for specname,spec in self.specs.iteritems():
+            # print spec.name
         # print "infoValue " + str(self.getInfoValue())
         # print "compressionValue " + str(self.compressionValue)
         # print "getBalancePenalty " + str(self.getBalancePenalty())
@@ -670,13 +672,13 @@ def getActFromAtom(a):
 
 
 def getGeneralisedSpaceTuples(atoms, originalInputSpaces):
-    
+    global renamingMode
+
     genInputSpaceTuples = []
 
     inputSpaceTupleSpecs = {}
     for spec in originalInputSpaces:
         inputSpaceTupleSpecs[spec.name] = copy.deepcopy(spec)
-        inputSpaceTupleSpecs[spec.name].name = "spec_" + inputSpaceTupleSpecs[spec.name].name
 
     ## There is no initial generalisation action:
     firstGeneralisationAct = {}
@@ -696,128 +698,157 @@ def getGeneralisedSpaceTuples(atoms, originalInputSpaces):
         # print act
         ## Also add the next generalisation action to the last tuple in the list. 
         genInputSpaceTuples[-1].nextGenAction = act
-        cSpec = generalisationTuple.specs[act["iSpace"][5:]]
+        cSpec = generalisationTuple.specs[lpToCaslStr(act["iSpace"])]
         newCompressionValue = 0
-        if act["actType"] == "rmOp" :
-            for op in cSpec.ops:
-                if toLPName(op.name,"po") == act["argVect"][0]:
-                    cSpec.ops.remove(op)
-                    break
+        
+        ########################## BEGIN renaming actions ########################## 
+        if act["actType"] in ["renamePred","renameSort","renameOp"]:
+            specToName = lpToCaslStr(act["argVect"][2])   
+            targetSpec = generalisationTuple.specs[specToName]
+            eleFrom = lpToCaslStr(act["argVect"][0])
+            eleTo = lpToCaslStr(act["argVect"][1])
+            if renamingMode == "mergeNames":
+                newEleName = eleFrom + "_" + eleTo
+            else: 
+                newEleName = eleTo
 
-        if act["actType"] == "renameOp" :
-            opFrom = act["argVect"][0]
-            opTo = act["argVect"][1]
-            for op in cSpec.ops:
-                if toLPName(op.name,"po") == opFrom:
-                    cSpec.ops.remove(op)
+            # Get axioms in spec that involve the element and rename the operator in them. 
+            for ax in cSpec.axioms:
+                newAxStr = renameEleInAxiom(ax.axStr, eleFrom, newEleName)
+                ax.axStr = newAxStr
+            
+            # Also rename element in all axioms in target spec. 
+            for ax in targetSpec.axioms:                
+                newAxStr = renameEleInAxiom(ax.axStr, eleTo, newEleName)
+                ax.axStr = newAxStr 
 
+            # Set generalisation steps and rename target spec.
+            targetSpec.generalisationSteps = targetSpec.generalisationSteps + 1            
+            targetSpec.name = specToName + "_gen_" + str(targetSpec.generalisationSteps)
+
+        if act["actType"] == "renameOp" :            
+            # Rename element in spec and add priority to compression value
+            for op in cSpec.ops:
+                if op.name == eleFrom:
+                    cSpec.ops.remove(op)
                     newOp = copy.deepcopy(op)
-                    newOp.name = lpToCaslStr(opTo)
+                    newOp.name = newEleName
                     cSpec.ops.append(newOp)
+                    ## Multiply by 100 to allow for more precise blend value computation
                     newCompressionValue += op.priority
-                    specToName = lpToCaslStr(act["argVect"][2])
-                    for specTo in originalInputSpaces:                                     
-                        if specTo.name == specToName:  
-                            for tmpOpTo in specTo.ops:
-                                if tmpOpTo.name == lpToCaslStr(opTo):
-                                    newCompressionValue += tmpOpTo.priority
-                                    break
-                            break
                     break
             
-            # Get axioms that involve the operator and rename the operator them. 
-            for ax in cSpec.axioms:
-                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(opFrom)+"(?!\w)", lpToCaslStr(opTo), ax.axStr)
-                ax.axStr = newAxStr
-                                    
-        if act["actType"] == "rmPred" :
-            for p in cSpec.preds:
-                if toLPName(p.name,"po") == act["argVect"][0]:
-                    cSpec.preds.remove(p)
+            # Rename also element in target spec and add priority to compression value
+            for tmpOpTo in targetSpec.ops:
+                if tmpOpTo.name == eleTo:
+                    tmpOpTo.name = newEleName
+                    newCompressionValue += tmpOpTo.priority
                     break
-
+            
         if act["actType"] == "renamePred" :
-            pFrom = act["argVect"][0]
-            pTo = act["argVect"][1]
+            # Rename element in spec and add priority to compression value
             for p in cSpec.preds:
-                if toLPName(p.name,"po") == pFrom:
-                    cSpec.preds.remove(p)                                    
+                if p.name == eleFrom:
+                    cSpec.preds.remove(p)                     
                     newPred = copy.deepcopy(p)
-                    newPred.name = lpToCaslStr(pTo)
+                    newPred.name = newEleName
                     cSpec.preds.append(newPred)
                     newCompressionValue += p.priority
-                    # Also add priority of predicate to which we rename to compression value
-                    specToName = lpToCaslStr(act["argVect"][2])
-                    for specTo in originalInputSpaces:                                        
-                        if specTo.name == specToName:                                              
-                            for tmpPredTo in specTo.preds:
-                                if tmpPredTo.name == lpToCaslStr(pTo):
-                                    newCompressionValue += tmpPredTo.priority
-                                    break
-                            break
                     break
-            # Get axioms that involve the predicate and rename the predicate them. 
-            for ax in cSpec.axioms:
-                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(pFrom)+"(?!\w)", lpToCaslStr(pTo), ax.axStr)
-                ax.axStr = newAxStr
-            
-        if act["actType"] == "rmSort" :
-            for srt in cSpec.sorts:
-                if toLPName(srt.name,"sort") == act["argVect"][0]:
-                    cSpec.sorts.remove(srt)
+                    
+            # Rename also element in target spec and add priority to compression value
+            specToName = lpToCaslStr(act["argVect"][2])
+            for tmpPredTo in generalisationTuple.specs[specToName].preds:
+                if tmpPredTo.name == eleTo:  
+                    tmpPredTo.name = newEleName
+                    newCompressionValue += tmpPredTo.priority
                     break
 
         if act["actType"] == "renameSort" :
-            sFrom = act["argVect"][0]
-            sTo = act["argVect"][1]
-            print "renaming sort " + sFrom + " to " + sTo
+            # Rename element in spec and add priority to compression value
             for s in cSpec.sorts:
-                if toLPName(s.name,"sort") == sFrom:
+                if s.name == eleFrom:
                     cSpec.sorts.remove(s)
                     newSort = copy.deepcopy(s)
-                    newSort.name = lpToCaslStr(sTo)
+                    newSort.name = newEleName
                     cSpec.sorts.append(newSort)
                     newCompressionValue += s.priority
+                    break
+            # Also add priority of sort to which we rename to compression value
+            for tmpSortTo in targetSpec.sorts:
+                if tmpSortTo.name == eleTo:
+                    tmpSortTo.name = newEleName
+                    newCompressionValue += tmpSortTo.priority
+                    break
                     
-                    # Also add priority of sort to which we rename to compression value
-                    specToName = lpToCaslStr(act["argVect"][2])
-                    for specTo in originalInputSpaces:                               
-                        if specTo.name == specToName:                                              
-                            for tmpSortTo in specTo.sorts:
-                                if tmpSortTo.name == lpToCaslStr(sTo):
-                                    newCompressionValue += tmpSortTo.priority
-                                    break
-                            break
 
-                    break
-
-            # change parent sorts of other sorts in this spec. (TODO: Is this necessary??)
+            # change parent sorts of other sorts in this spec. 
             for s in cSpec.sorts:
-                if toLPName(s.parent,"sort") == sFrom:
-                    s.parent = lpToCaslStr(sTo)
+                if s.parent == eleFrom:
+                    s.parent = newEleName
                     break
-            
-            # Get axioms that involve the sort and rename the sorts
-            for ax in cSpec.axioms:
-                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(sFrom)+"(?!\w)", lpToCaslStr(sTo), ax.axStr)
-                ax.axStr = newAxStr
+            # change parent sorts of other sorts in target spec.
+            for s in targetSpec.sorts:
+                if s.parent == eleTo:
+                    s.parent = newEleName
+                    break                        
 
-            # change sorts in operators
+            # change sorts in operators of this spec
             for op in cSpec.ops:
                 # change domain sort. 
-                if op.dom == lpToCaslStr(sFrom):
-                    op.dom = newSort.name
+                if op.dom == eleFrom:
+                    op.dom = newEleName
                 for n,opSort in enumerate(op.args):
-                    if opSort == lpToCaslStr(sFrom):
-                        op.args[n] = newSort.name
+                    if opSort == eleFrom:
+                        op.args[n] = newEleName
+
+            # change sorts in operators of target spec
+            for op in targetSpec.ops:
+                # change domain sort. 
+                if op.dom == eleTo:
+                    op.dom = newEleName
+                for n,opSort in enumerate(op.args):
+                    if opSort == eleTo:
+                        op.args[n] = newEleName
 
             # change sorts in predicates
             for p in cSpec.preds:
                 # change domain sort. 
                 for n,pSort in enumerate(p.args):
-                    if pSort == lpToCaslStr(sFrom):
-                        p.args[n] = newSort.name
+                    if pSort == eleFrom:
+                        p.args[n] = newEleName
 
+            # change sorts in predicates
+            for p in targetSpec.preds:
+                # change domain sort. 
+                for n,pSort in enumerate(p.args):
+                    if pSort == eleTo:
+                        p.args[n] = newEleName                        
+        
+        ########################## END renaming actions ########################## 
+
+        ########################## BEGIN removal actions ########################## 
+        if act["actType"] == "rmOp" :
+            for op in cSpec.ops:
+                if toLPName(op.name,"po") == act["argVect"][0]:
+                    cSpec.ops.remove(op)
+                    break                                    
+        if act["actType"] == "rmPred" :
+            for p in cSpec.preds:
+                if toLPName(p.name,"po") == act["argVect"][0]:
+                    cSpec.preds.remove(p)
+                    break
+        if act["actType"] == "rmSort" :
+            for srt in cSpec.sorts:
+                if toLPName(srt.name,"sort") == act["argVect"][0]:
+                    cSpec.sorts.remove(srt)
+                    break
+        if act["actType"] == "rmAx" :
+            for a in cSpec.axioms:
+                if str(a.id) == act["argVect"][0]:
+                    cSpec.axioms.remove(a)
+                    break
+        ########################## END removal actions ########################## 
 
         ########################## BEGIN genSort     ########################## 
         if act["actType"] == "genSort" :
@@ -839,7 +870,7 @@ def getGeneralisedSpaceTuples(atoms, originalInputSpaces):
 
             # Get axioms that involve the sort and rename the sorts
             for ax in cSpec.axioms:
-                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(sFrom)+"(?!\w)", lpToCaslStr(sTo), ax.axStr)
+                newAxStr = renameEleInAxiom(ax.axStr, lpToCaslStr(sFrom), lpToCaslStr(sTo))
                 ax.axStr = newAxStr
 
             # change sorts in operators
@@ -859,272 +890,29 @@ def getGeneralisedSpaceTuples(atoms, originalInputSpaces):
                         p.args[n] = newSort.name
         ########################## END genSort     ########################## 
 
-        if act["actType"] == "rmAx" :
-            for a in cSpec.axioms:
-                if str(a.id) == act["argVect"][0]:
-                    cSpec.axioms.remove(a)
-                    break
+        ## Set compression value of tuple, which is identical to compression value of individual specs. 
+        generalisationTuple.compressionValue +=  (newCompressionValue * 100)
+        cSpec.compressionValue = generalisationTuple.compressionValue
+        
+        if act["actType"] in ["renamePred","renameSort","renameOp"]:
+            specToName = lpToCaslStr(act["argVect"][2])   
+            targetSpec = generalisationTuple.specs[specToName]
+            targetSpec.compressionValue = generalisationTuple.compressionValue
 
-        generalisationTuple.compressionValue = generalisationTuple.compressionValue + newCompressionValue
         generalisationTuple.lastGenAction = act
         cSpec.generalisationSteps = cSpec.generalisationSteps + 1
-        cSpec.name = act["iSpace"] + "_gen_" + str(cSpec.generalisationSteps)
-        cSpec.compressionValue = generalisationTuple.compressionValue
+        cSpec.name = lpToCaslStr(act["iSpace"]) + "_gen_" + str(cSpec.generalisationSteps)
         cSpec.setInfoValue()
         
         genInputSpaceTuples.append(copy.deepcopy(generalisationTuple))
     
     # for genTuple in genInputSpaceTuples:
-        # print genTuple.toStr()
+        # print genTuple.printInfo()
 
     return genInputSpaceTuples
 
 
 
-def getGeneralizedSpaces(atoms, originalInputSpaces):
-    inputSpaces = copy.deepcopy(originalInputSpaces)
-    generalizations = {}
-    lastSpecName = ''
-
-    allowedCombi = {}
-    for spec in originalInputSpaces:
-        generalizations[spec.name] = [spec]
-        lastSpecName = spec.name
-        allowedCombi[toLPName(spec.name,"spec")] =  0
-
-    allowedCombis = [allowedCombi]
-
-    # modify CASL data according to Answer Set atoms.
-    acts = {}
-    for atom in atoms:
-        a = str(atom)
-        if a[:4] == "exec":
-            act = getActFromAtom(a)
-            if act["step"] not in acts.keys():
-                acts[act["step"]] = {}
-            if act["iSpace"] not in acts[act["step"]].keys():
-                acts[act["step"]][act["iSpace"]] = []
-            
-            acts[act["step"]][act["iSpace"]].append(act)
-    genSteps = {}
-    for step in sorted(acts.keys()):
-        genSteps[step] = []
-        for iSpace in sorted(acts[step]):
-            lastAllowedCombi = allowedCombis[len(allowedCombis)-1]
-            thisAllowedCombi = copy.deepcopy(lastAllowedCombi)
-            for specName in thisAllowedCombi:
-                if specName == iSpace:
-                    thisAllowedCombi[specName] = thisAllowedCombi[specName] + 1
-                    allowedCombis.append(thisAllowedCombi)
-            for cSpec in inputSpaces:
-                # remove operators, predicates and axioms
-                if toLPName(cSpec.name,"spec") == iSpace:                      
-                    newCompressionValue = 0
-                    infoValue = 0
-                    genCost = 0
-                    for act in acts[step][iSpace]:
-                        # print act
-                        if act["actType"] == "rmOp" :
-                            for op in cSpec.ops:
-                                if toLPName(op.name,"po") == act["argVect"][0]:
-                                    cSpec.ops.remove(op)
-                                    # genCost += op.priority
-                                    break
-
-                        if act["actType"] == "renameOp" :
-                            opFrom = act["argVect"][0]
-                            opTo = act["argVect"][1]
-                            for op in cSpec.ops:
-                                if toLPName(op.name,"po") == opFrom:
-                                    cSpec.ops.remove(op)
-
-                                    newOp = copy.deepcopy(op)
-                                    newOp.name = lpToCaslStr(opTo)
-                                    cSpec.ops.append(newOp)
-                                    newCompressionValue += op.priority
-                                    # cSpec.compressionValue = cSpec.compressionValue + op.priority
-                                    # Also add priority of operator to which we rename to compression value
-                                    specToName = lpToCaslStr(act["argVect"][2])
-                                    for specTo in originalInputSpaces:                                     
-                                        if specTo.name == specToName:  
-                                            for tmpOpTo in specTo.ops:
-                                                if tmpOpTo.name == lpToCaslStr(opTo):
-                                                    newCompressionValue += tmpOpTo.priority
-                                                    # cSpec.compressionValue = cSpec.compressionValue + tmpOpTo.priority
-                                                    break
-                                            break
-                                    break
-                            # Get axioms that involve the operator and rename the operator them. 
-                            for ax in cSpec.axioms:
-                                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(opFrom)+"(?!\w)", lpToCaslStr(opTo), ax.axStr)
-                                ax.axStr = newAxStr
-                                                    
-                        if act["actType"] == "rmPred" :
-                            for p in cSpec.preds:
-                                if toLPName(p.name,"po") == act["argVect"][0]:
-                                    cSpec.preds.remove(p)
-                                    # cSpec.genCost = cSpec.genCost + p.priority
-                                    break
-
-                        if act["actType"] == "renamePred" :
-                            pFrom = act["argVect"][0]
-                            pTo = act["argVect"][1]
-                            for p in cSpec.preds:
-                                if toLPName(p.name,"po") == pFrom:
-                                    cSpec.preds.remove(p)                                    
-                                    newPred = copy.deepcopy(p)
-                                    newPred.name = lpToCaslStr(pTo)
-                                    cSpec.preds.append(newPred)
-                                    # cSpec.compressionValue = cSpec.compressionValue + p.priority
-                                    newCompressionValue += p.priority
-                                    # Also add priority of predicate to which we rename to compression value
-                                    specToName = lpToCaslStr(act["argVect"][2])
-                                    for specTo in originalInputSpaces:                                        
-                                        if specTo.name == specToName:                                              
-                                            for tmpPredTo in specTo.preds:
-                                                if tmpPredTo.name == lpToCaslStr(pTo):
-                                                    # cSpec.compressionValue = cSpec.compressionValue + tmpPredTo.priority
-                                                    newCompressionValue += tmpPredTo.priority
-                                                    break
-                                            break
-                                    break
-                            # Get axioms that involve the predicate and rename the predicate them. 
-                            for ax in cSpec.axioms:
-                                # if p.name in ax.determinePredsOpsSorts():
-                                    # Add new updated axioms with changed operator names
-                                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(pFrom)+"(?!\w)", lpToCaslStr(pTo), ax.axStr)
-                                ax.axStr = newAxStr
-                                # ax.id = axMap[newAxStr]
-                            
-                        if act["actType"] == "rmSort" :
-                            for srt in cSpec.sorts:
-                                if toLPName(srt.name,"sort") == act["argVect"][0]:
-                                    cSpec.sorts.remove(srt)
-                                    # cSpec.genCost = cSpec.genCost + srt.priority
-                                    break
-
-                        if act["actType"] == "renameSort" :
-                            sFrom = act["argVect"][0]
-                            sTo = act["argVect"][1]
-                            print "renaming sort " + sFrom + " to " + sTo
-                            for s in cSpec.sorts:
-                                if toLPName(s.name,"sort") == sFrom:
-                                    cSpec.sorts.remove(s)
-                                    newSort = copy.deepcopy(s)
-                                    newSort.name = lpToCaslStr(sTo)
-                                    cSpec.sorts.append(newSort)
-                                    
-                                    newCompressionValue += s.priority
-                                    
-                                    # Also add priority of sort to which we rename to compression value
-                                    specToName = lpToCaslStr(act["argVect"][2])
-                                    for specTo in originalInputSpaces:                               
-                                        if specTo.name == specToName:                                              
-                                            for tmpSortTo in specTo.sorts:
-                                                if tmpSortTo.name == lpToCaslStr(sTo):
-                                                    # cSpec.compressionValue = cSpec.compressionValue + tmpSortTo.priority
-                                                    newCompressionValue += tmpSortTo.priority
-                                                    break
-                                            break
-
-                                    break
-
-
-                            # change parent sorts of other sorts in this spec. (TODO: Is this necessary??)
-                            for s in cSpec.sorts:
-                                if toLPName(s.parent,"sort") == sFrom:
-                                    s.parent = lpToCaslStr(sTo)
-                                    break
-                            
-
-                            # Get axioms that involve the sort and rename the sorts
-                            for ax in cSpec.axioms:
-                                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(sFrom)+"(?!\w)", lpToCaslStr(sTo), ax.axStr)
-                                ax.axStr = newAxStr
-
-                            # change sorts in operators
-                            for op in cSpec.ops:
-                                # change domain sort. 
-                                if op.dom == lpToCaslStr(sFrom):
-                                    op.dom = newSort.name
-                                for n,opSort in enumerate(op.args):
-                                    if opSort == lpToCaslStr(sFrom):
-                                        op.args[n] = newSort.name
-
-                            # change sorts in predicates
-                            for p in cSpec.preds:
-                                # change domain sort. 
-                                for n,pSort in enumerate(p.args):
-                                    if pSort == lpToCaslStr(sFrom):
-                                        p.args[n] = newSort.name
- 
-
-                        ########################## BEGIN genSort     ########################## 
-                        if act["actType"] == "genSort" :
-                            sFrom = act["argVect"][0]
-                            sTo = act["argVect"][1]
-                            print "generalising sort " + sFrom + " to " + sTo
-                            for s in cSpec.sorts:
-                                if toLPName(s.name,"sort") == sFrom:
-                                    cSpec.sorts.remove(s)
-                                    newSort = copy.deepcopy(s)
-                                    newSort.name = lpToCaslStr(sTo)
-                                    cSpec.sorts.append(newSort)                                    
-
-                            # change parent sorts of other sorts in this spec.
-                            for s in cSpec.sorts:
-                                if toLPName(s.parent,"sort") == sFrom:
-                                    s.parent = lpToCaslStr(sTo)
-                                    break                            
-
-                            # Get axioms that involve the sort and rename the sorts
-                            for ax in cSpec.axioms:
-                                newAxStr = re.sub("(?<!\w)"+lpToCaslStr(sFrom)+"(?!\w)", lpToCaslStr(sTo), ax.axStr)
-                                ax.axStr = newAxStr
-
-                            # change sorts in operators
-                            for op in cSpec.ops:
-                                # change domain sort. 
-                                if op.dom == lpToCaslStr(sFrom):
-                                    op.dom = newSort.name
-                                for n,opSort in enumerate(op.args):
-                                    if opSort == lpToCaslStr(sFrom):
-                                        op.args[n] = newSort.name
-
-                            # change sorts in predicates
-                            for p in cSpec.preds:
-                                # change domain sort. 
-                                for n,pSort in enumerate(p.args):
-                                    if pSort == lpToCaslStr(sFrom):
-                                        p.args[n] = newSort.name
-                        ########################## END genSort     ########################## 
-
-                        if act["actType"] == "rmAx" :
-                            for a in cSpec.axioms:
-                                if str(a.id) == act["argVect"][0]:
-                                    cSpec.axioms.remove(a)
-                                    # cSpec.genCost = cSpec.genCost + a.priority
-                                    break
-                    cSpec.compressionValue += newCompressionValue
-                    thisCSpec = copy.deepcopy(cSpec)
-                    thisCSpec.name = thisCSpec.name + "_gen_" + str(len(generalizations[thisCSpec.name]))
-                    genSteps[step].append(thisCSpec.name)
-                    thisCSpec.totalSteps = step
-                    generalizations[cSpec.name].append(thisCSpec)
-
-    # add one last generic cSpec
-    genSpec = copy.deepcopy(generalizations[lastSpecName][len(generalizations[lastSpecName])-1])
-    genSpec.name = "Generic"
-    generalizations["Generic"] = [genSpec]    
-
-    # Compute all infoValues
-    for specList in generalizations.values():
-        for spec in specList:
-            spec.setInfoValue()             
-            # print spec.toCaslStr()
-    # print " allowed combis:"
-    # print allowedCombis
-    return allowedCombis,generalizations
 
 # This function works, but it should be more sophisticated and use logical equivalence instead of syntactic equality to check if axioms are equal. 
 def getNewAxIdOpRename(axId,op1,op2):
@@ -1177,7 +965,7 @@ def renameEleAndGetNewEqClass(eqClassId,element,eleFrom,eleTo):
     axStr = axEqClasses[int(eqClassId)]    
 
     # print "renaming " + str(eleFrom) + " to " + str(eleTo) + " in axiom " + str(axStr)
-    newAxStr = re.sub("(?<!\w)"+lpToCaslStr(str(eleFrom))+"(?!\w)",lpToCaslStr(str(eleTo)),axStr)
+    newAxStr = renameEleInAxiom(axStr,lpToCaslStr(str(eleFrom)),lpToCaslStr(str(eleTo)))
 
     # This is necessary to normalize (aggregate) variable list in string
     if axStr != newAxStr:
@@ -1189,3 +977,5 @@ def renameEleAndGetNewEqClass(eqClassId,element,eleFrom,eleTo):
 def isEquivalent(axStr1,axStr2):
     return axStr1 == axStr2
 
+def renameEleInAxiom(axStr, eleFrom,eleTo):
+    return re.sub("(?<!\w)"+eleFrom+"(?!\w)",eleTo,axStr)

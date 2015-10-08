@@ -51,20 +51,20 @@ def onModelGeneralize(model):
 
         # writeBlends(blends)
         
-        jsonOutput = writeJsonOutput(blends,inputSpaceNames)
-        blendJsonList = jsonOutput['blendList']       
-        for blendJson in blendJsonList:
-            os.system("rm blend.json")
-            outFile = open('blend.json',"w")
-            outFile.write(json.dumps(blendJson))
-            outFile.close()            
-            print 'Other blend? (n) '
-            sys.stdout.flush()
-            x = raw_input()            
-            if x == 'n':
-               break;
-        print 'finished'
-        sys.stdout.flush()
+        # jsonOutput = writeJsonOutput(blends,inputSpaceNames)
+        # blendJsonList = jsonOutput['blendList']       
+        # for blendJson in blendJsonList:
+        #     os.system("rm blend.json")
+        #     outFile = open('blend.json',"w")
+        #     outFile.write(json.dumps(blendJson))
+        #     outFile.close()            
+        #     print 'Other blend? (n) '
+        #     sys.stdout.flush()
+        #     x = raw_input()            
+        #     if x == 'n':
+        #        break;
+        # print 'finished'
+        # sys.stdout.flush()
         
 
 def getModel(model):

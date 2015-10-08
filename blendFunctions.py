@@ -3,11 +3,12 @@ import os, sys, time, subprocess, threading, shlex
 from settings import *
 from langCasl import *
 from itertools import *
+from sets import Set
 import json
 
 
 def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
-    global blendValuePercentageBelowMinToKeep
+    global blendValuePercentageBelowMinToKeep, renamingMode
 
     if highestValue == -sys.maxint:
         minBlendValueToConsider = -sys.maxint
@@ -35,7 +36,6 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
             generic.lastGenAction = {}
             generic.nextGenAction = {}
             generic.name = "Generic"
-            generic.compressionValue = -1
             cstr += generic.toCaslStr()+"\n\n"
             break
         break
@@ -47,21 +47,36 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
             if spec.name != lastSpecs[specName]:
                 # Inherit everything from last spec
                 lastSpecName = lastSpecs[specName]
-                if lastSpecName[:5] == "spec_":
-                    lastSpecName = lastSpecName[5:]
-                specStr = "spec " + spec.name[5:] + " = " + lastSpecName
+                lastSpecs[specName] = spec.name
+
+                specStr = "spec " + spec.name + " = " + lastSpecName
                 
-                # Depending on the action type, write mapping (renamings and sort generalisation) or add elements (removal)
+                # # Depending on the action type, write mapping (renamings and sort generalisation) or add elements (removal)
                 genAction =  spaceTuple.nextGenAction
                 if "actType" in genAction.keys():
                     # print "The generalisation action to reach " + spec.name + " is: "
                     # print genAction
                     if genAction["actType"] in ["renamePred","renameSort","renameOp","genSort"]:
-                        renaming = lpToCaslStr(genAction['argVect'][1]) + " |-> " + lpToCaslStr(genAction['argVect'][0])
-                        specStr += " with " +  renaming
+                        eleFrom = lpToCaslStr(genAction['argVect'][1])
+                        eleTo = lpToCaslStr(genAction['argVect'][0]) 
+                        if renamingMode == "mergeNames":
+                            generalEleName = eleTo + "_" + eleFrom
+                        else:
+                            generalEleName = eleFrom
+
+                        if lpToCaslStr(genAction["iSpace"]) == specName:
+                            renaming = generalEleName + " |-> " + eleTo
+                        else:
+                            renaming = generalEleName + " |-> " + eleFrom
+                        # TODO: Check if this is necessary. Axiom renaming should actually have happened in getGeneralisedSpaceTuples in langCasl.py already.
+                        # for axiom in spec.axioms:
+                        #     axiom.axStr = renameEleInAxiom(axiom.axStr, eleFrom,eleTo)
+                        
                         if specRenamings[specName] != "":
                             specRenamings[specName] += ", "
                         specRenamings[specName] += renaming
+
+                        specStr += " with " +  renaming
 
                     if genAction["actType"] in ["rmPred","rmOp","rmSort","rmAx"]:    
                         specStr += " then\n "
@@ -85,23 +100,19 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                                 break
                     if genAction["actType"] == "rmAx":
                         axId = genAction['argVect'][0]
-                        print "axioms:"
                         for ax in spec.axioms:
-                            print ax.toCaslStr()
                             if axId == str(ax.id):
                                 specStr = specStr + ax.toCaslStr()
                                 break
-
-                specStr = specStr + "\nend \n\n"
                     
-                # The mapping should be fully identifiable by HETS due to inheritance, so we don't need to  provide the mappings explicitly. 
-                mapFromGenericStr = "view GenTo"+spec.name[5:]+" : Generic to "+spec.name[5:]
+                mapFromGenericStr = "view GenTo"+spec.name+" : Generic to "+spec.name
                 if specRenamings[specName] != "":
                     mapFromGenericStr += " = " 
-                mapFromGenericStr += specRenamings[specName] + " \nend \n \n"
-                    
-                lastSpecs[specName] = spec.name
-                cstr = cstr + specStr + mapFromGenericStr
+                mapFromGenericStr += specRenamings[specName]
+                mapFromGenericStr += " end \n\n" 
+
+                # cstr = cstr +   spec.toCaslStr() + "\n\n" + mapFromGenericStr
+                cstr = cstr +   specStr + "\n\n" + mapFromGenericStr
 
         # State blends (colimit operation)
         value = spaceTuple.getBlendValue()
@@ -109,19 +120,19 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
         # print "value of blend: " + str(value) + " -- minValue: "  + str(minBlendValueToConsider)
         if value < minBlendValueToConsider:
             continue
-        if value not in blendNames.keys():
+        if value not in blendNames.keys(): 
             blendNames[value] = []
-        print "Specifying blends with generalization value of " + str(value) 
           
+
         blendName =   "Blend" + "_v"+str(value)+ "_"                
         for specName,spec in spaceTuple.specs.iteritems():
             steps = spec.generalisationSteps
             blendName += "_" + specName + "_" + str(steps)
-        cstr = cstr + "spec " + blendName
         blendNames[value].append(blendName)
+        cstr = cstr + "spec " + blendName
         cstr = cstr + " = combine "
         for specName,spec in spaceTuple.specs.iteritems():            
-            cstr = cstr + "GenTo"+spec.name[5:]+","
+            cstr = cstr + "GenTo"+spec.name+","
         cstr = cstr[:-1]
         cstr = cstr + " end\n\n"
         
@@ -198,7 +209,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                 blends.append(blendInfo)
 
     os.system("rm *.tptp")
-    os.remove("amalgamTmp.casl")
+    # os.remove("amalgamTmp.casl")
     
     return [blends,highestValue]
 
@@ -237,10 +248,7 @@ def writeJsonOutput(blends,inputSpaceNames):
         match = re.search(genericSpacePattern,blendStr,re.DOTALL)
         jsonBlend['genericSpace'] = match.group(0)
         
-        #'combi': {'spec_G7': 1, 'spec_Bbmin': 3}
-        #G7_gen_1 
         combi = blend['combi']
-        #['G7', 'Bbmin']
         inputSpaceNr = 1
         for inputSpaceName in inputSpaceNames:
             inputSpace = inputSpaceName
@@ -256,8 +264,7 @@ def writeJsonOutput(blends,inputSpaceNames):
             jsonBlend['input'+str(inputSpaceNr)] = match.group(0)
 
             inputSpaceNr = inputSpaceNr +1
-            
-        
+                    
         jsonBlend['blend'] = generateBlend(blend)
         jsonOutput['blendList'].append(jsonBlend)
         blendNr = blendNr +1
@@ -314,7 +321,7 @@ def generateBlend(blend):
     outFile.write(fullBlendStr)
     outFile.close()
 
-        # os.system("cp " + thName + " " + thName[:-3]+".casl")
+    # os.system("cp " + thName + " " + thName[:-3]+".casl")
     os.system("rm *.th")
     # blendFilesList += thName[:-3]+".casl\n"
     blendFilesList += fName
@@ -336,6 +343,7 @@ def writeBlends(blends):
     os.system("rm Blend_*.th")
     bNum = 0
     blendFilesList = ''
+    existingBlends = Set()
     for blend in blends:
 
         blendStr = blend["prettyHetsStr"]
@@ -368,7 +376,15 @@ def writeBlends(blends):
         explicitBlendStr = explicitBlendStr[lineBreakPos+1:]
         lineBreakPos = explicitBlendStr.find("\n")
         explicitBlendStr = explicitBlendStr[lineBreakPos+1:]
-        explicitBlendStr = "\n\n\nspec BlendExplicit = \n" + explicitBlendStr + "\n end\n"
+        explicitBlendStr = "\n\n\nspec BlendExplicit = \n" + explicitBlendStr + "\nend\n"
+
+        # Check if this blend has already been produced. 
+        # if explicitBlendStr in existingBlends:
+        #     os.system("rm " + fName)
+        #     os.system("rm *.th")
+        #     continue
+
+        existingBlends.add(explicitBlendStr)
 
         outFile = open(fName,"r")
         fullBlendStr = outFile.read()
@@ -394,6 +410,9 @@ def writeBlends(blends):
         fileListFile = open("blendFiles.txt","w")
         fileListFile.write(blendFilesList)
         fileListFile.close()
+
+    
+
 
 def checkConsistency(blendTptpName):
     consistent = checkConsistencyEprover(blendTptpName)

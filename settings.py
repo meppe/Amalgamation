@@ -6,7 +6,7 @@ inputFile = "examples/minimal.casl"
 inputSpaceNames = ["S1","S2"]
 
 ###### The number of models to be generated (0 for all models)
-numModels = 1
+numModels = 10
 
 ###### The minimal number of iterations for generalization
 minIterationsGeneralize = 1
@@ -32,9 +32,12 @@ hetsExe = 'hets'
 ###### Switch to enable the explicit generation of blend files (see function writeBlends.py) ######
 genExplicitBlendFiles = True
 
-###### A switch to determine whether to only generalise or whether to also blend
+###### A switch to determine whether to only generalise or whether to also  (mostly for debugging...)
 generaliseOnly = False
 
+###### Determines the renaming mode. Can be either mergeNames or renameTo. This determines whether renamed elements in a spec are merged, i.e., connecged with a "-" to generate a new name or whether one name is selected as target name. 
+# renamingMode = "renameTo"
+renamingMode = "mergeNames"
 
 
 ###################################################################
