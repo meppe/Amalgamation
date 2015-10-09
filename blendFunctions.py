@@ -8,7 +8,7 @@ import json
 
 
 def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
-    global blendValuePercentageBelowMinToKeep, renamingMode
+    global blendValuePercentageBelowMinToKeep, renamingMode, consistencyCheckBehavior
 
     if highestValue == -sys.maxint:
         minBlendValueToConsider = -sys.maxint
@@ -183,9 +183,11 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
 
             thisCombiConsistent = checkConsistency(blendTptpName)
 
-                        
-            # if thisCombiConsistent == 1: # If we can show that the blend is consistent
-            if thisCombiConsistent != 0: # If we can not show that the blend is inconsistent                
+            if consistencyCheckBehavior == "brave":
+                assumeConsistent = thisCombiConsistent != 0 # If we can not show that the blend is inconsistent 
+            else:
+                assumeConsistent = thisCombiConsistent == 1 # If we can show that the blend is consistent
+            if assumeConsistent:                
                 prettyBlendStr = prettyPrintBlend2(blendName, cstr)
                 combi = {}
                 combiParts = blendName.split("__")[1].split("_")
@@ -343,7 +345,8 @@ def writeBlends(blends):
     os.system("rm Blend_*.th")
     bNum = 0
     blendFilesList = ''
-    existingBlends = Set()
+    # existingBlends = Set()
+    blendFNameValues = {}
     for blend in blends:
 
         blendStr = blend["prettyHetsStr"]
@@ -376,15 +379,37 @@ def writeBlends(blends):
         explicitBlendStr = explicitBlendStr[lineBreakPos+1:]
         lineBreakPos = explicitBlendStr.find("\n")
         explicitBlendStr = explicitBlendStr[lineBreakPos+1:]
-        explicitBlendStr = "\n\n\nspec BlendExplicit = \n" + explicitBlendStr + "\nend\n"
+        explicitBlendStr = "\n\nspec BlendExplicit = \n" + explicitBlendStr + "\nend\n"
 
-        # Check if this blend has already been produced. 
-        # if explicitBlendStr in existingBlends:
-        #     os.system("rm " + fName)
-        #     os.system("rm *.th")
-        #     continue
+        value = int(fName.split("Blend_v")[1].split("__")[0])
 
-        existingBlends.add(explicitBlendStr)
+
+        # explicitBlendStr = "%%% Blend value: " + str(value) + explicitBlendStr
+
+        
+        
+        # Check if this blend has already been produced. If so, do not write it again. 
+        if explicitBlendStr in blendFNameValues.keys():
+            if blendFNameValues[explicitBlendStr][0] >= value:
+                os.system("rm " + fName)
+                os.system("rm *.th")    
+                continue
+            # The following lines are a quickfix to forbid identical blends with a different value, as described in the README.md. It just removes idenitcal existing blends with a lower value. 
+            if blendFNameValues[explicitBlendStr][0] < value:
+                # print " same blend with lower value exists. removing " + blendFNameValues[explicitBlendStr][1]
+                os.system("rm " + blendFNameValues[explicitBlendStr][1])
+                os.system("rm " + blendFNameValues[explicitBlendStr][1][:-5]+"_Blend.casl")
+                # os.system("rm *.th")    
+                # continue
+
+        blendFNameValues[explicitBlendStr] = [value,fName]
+                
+
+        
+        
+        
+
+        # existingBlends.add(explicitBlendStr)
 
         outFile = open(fName,"r")
         fullBlendStr = outFile.read()
@@ -415,9 +440,12 @@ def writeBlends(blends):
 
 
 def checkConsistency(blendTptpName):
+    global darwinTimeLimit
     consistent = checkConsistencyEprover(blendTptpName)
-
+    if darwinTimeLimit == 0:
+        return consistent
     if consistent == -1:
+
         print "Consistency could not be determined by eprover, trying darwin"                
         consistent = checkConsistencyDarwin(blendTptpName)
         # if consistent == 0 or consistent == 1:

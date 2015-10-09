@@ -49,7 +49,7 @@ If you look at the settings.py, you'll also find a cadence fusion example to obt
 	- A priority of "-1" means that the axiom, operator, predicate or sort is fixed and not removable. 
 	
 
-### Important limitations and TODOs
+### Important limitations, bugs and TODOs
 	- Operator,  predicate and sort names must be disjoint in each specification, i.e. a operator name can 
 	not be a predicate name or a sort name. Furthermore, overloading of operators or predicates is not supported. Otherwise this will result in unpredictable behavior.
 	- Logical Equivalence of axioms is currently determined by syntactic equivalence. This is of course a much stronger form of equivalence and a serious limitation of the system.
@@ -58,8 +58,6 @@ If you look at the settings.py, you'll also find a cadence fusion example to obt
 	- There is a conceptual error in how the colimit makes the blend: Currently, the generic space contains all elements to which stuff is renamed. However, this causes a problem with the colimit. For example, let a predicate a in spec1 be renamed to a predicate b in spec2, so that in the generic space there is one predicate a_b which is mapped to both a and b in their respective specifications. Let spec1' and spec2' be more specific versions of spec1 and spec2, where the elements are not yet renamed. Then, blending spec1' and spec2' will cause the blend to have only one predicate a_b, as found in the generic space,l but what we want to have is both predicates a and b separately. This is correct in the sense that the colimit works this way, but its not how we had the blending in mind. Therefore, we need to have different generic spaces for each generalisation tuple. 
 	The problem appears in commit 1284230. Compare Blend_v2050__House_4_Boat_3_b_21.casl and Blend_v1850__House_3_Boat_2_b_5_Blend.casl, which have to the same blend with a different value. 
 	- This is probably the same problem as the one stated above: There is an unexpected (yet probably correct) behavior by the colimit, which messes up with the value computation of blends. In the colimit, different operators with the same sorts may be blended and at the same time renamed. This happens in commit 0bbd423 from 2nd Oct. 2015: E.G. consider Blend Blend_v28__House_2_Boat_3_b_42.casl. this is identical to a blend with a higher value, namely Blend_v30__House_2_Boat_4_b_60.casl. This should not be the case. It has something to do with the gray arrow from the input space to the blend in the HETS diagram. 
-
 	- Each element in a spec can be only renamed once. Therefore, it is currently not possible to have more than two input specs. To change this, one has to change stuff in the function findLeastGeneralizedBlends, and in the amalgamTmp.casl file generation
-	- 
 
 

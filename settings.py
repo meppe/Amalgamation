@@ -19,7 +19,11 @@ blendValuePercentageBelowHighestValueToKeep = 10
 
 ###### Time limit for eprover and darwin consistency check in seconds CPU time
 eproverTimeLimit = 4
-darwinTimeLimit = 1
+darwinTimeLimit = 0 ### 0 means that we don't use darwin at all. 
+
+###### Consistency check: brave or careful
+consistencyCheckBehavior = "brave" ### If we can not prove consistency, we assume the blend is consistent
+# consistencyCheckBehavior = "careful"  ### If we can not prove consistency, we assume the blend is inconsistent
 
 ###### A switch to determine whether to perform only one generalisation per step in total, or one generalisation per step per specification. The former makes the system more transparent, and gives one blend per stable model. The later makes the ASP solving faster, but it is more "hacky" in that the same blends can be generated multiple times. 
 singleGenPerStep = True
@@ -72,6 +76,8 @@ renamingMode = "mergeNames"
 # inputFile = "examples/AIJ-paper/naturalsAndLists_fact_minimal.casl"
 # inputSpaceNames = ["List","Nat"]
 
-inputFile = "examples/AIJ-paper/HouseBoat_GoguenWebsite.casl"
+# inputFile = "examples/AIJ-paper/HouseBoat_GoguenWebsite.casl"
+# inputFile = "examples/AIJ-paper/HouseBoat_simple.casl"
+inputFile = "examples/AIJ-paper/HouseBoat_movingProp.casl"
 inputSpaceNames = ["House","Boat"]
 

@@ -1,0 +1,55 @@
+%% COINVENT House Boat example
+%% =================================
+%% ### Authors:
+%% - Manfred Eppe (meppe@iiia.csic.es)
+%% - Roberto Confalonieri (confalonieri@iiia.csic.es)
+%% This is the house boat example very similar to the version from Goguen's website: 
+%% https://cseweb.ucsd.edu/~goguen/papers/blend.html
+%% We start from HouseBat_simple, and add a moving predicate to indicate whether an object is moving.
+
+
+spec SemSys = 
+  sort PriorityDummySort
+  op prioDummyOp : PriorityDummySort
+end
+
+
+spec Data = 
+    free type Medium ::= land | water
+end
+
+
+
+spec Base = SemSys and Data then
+    sorts Person Object
+    op on : Object -> Medium
+    pred moving : Object
+end
+
+
+
+spec House = Base then
+    ops
+        house: Object
+        resident: Person
+    preds
+        liveIn: Person * Object
+        
+    . moving(house)
+    . liveIn(resident,house)
+    . on(house) = land %(AxOnHouseLand:p:1)%
+end
+
+
+spec Boat = Base then
+    ops
+        boat: Object
+        passenger: Person
+    preds
+        ride: Person * Object
+
+    . not moving(boat)
+    . ride(passenger,boat)
+    . on(boat) = water %(AxOnBoatWater:p:1)%
+end
+

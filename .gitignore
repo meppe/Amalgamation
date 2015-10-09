@@ -13,3 +13,5 @@ examples/AIJ-Paper/tritone_demo.lp
 amalgamTmp.casl
 HouseBoat.lp
 HouseBoat_GoguenWebsite.lp
+examples/AIJ-Paper/HouseBoat_movingProp.lp
+examples/AIJ-Paper/HouseBoat_simple.lp

@@ -3,11 +3,9 @@
 %% ### Authors:
 %% - Manfred Eppe (meppe@iiia.csic.es)
 %% - Roberto Confalonieri (confalonieri@iiia.csic.es)
-%% This is the house boat example with several outcomes. 
-%% This version is exactly the version from Goguen's website: 
+%% This is the house boat example very similar to the version from Goguen's website: 
 %% https://cseweb.ucsd.edu/~goguen/papers/blend.html
-%% just without the manual definition of the generic space.
-%% The problem with this original specification is, that actually an object can be on both land or water. (See spec BestBlend below)
+%% The difference is, that we also provie the generic space, and that instead of modeling "on" as predicate, we model it as operator, to avoid the case as in HouseBoat_GoguenWebsite.casl, where the houseboat is on both land and water. 
 
 
 spec SemSys = 
@@ -26,6 +24,7 @@ end
 
 spec Base = SemSys and Data then
     sorts Person Object
+    ops on : Object -> Medium
 end
 
 
@@ -36,9 +35,9 @@ spec House = Base then
         resident: Person
     preds
         liveIn: Person * Object
-        on : Object * Medium
+        
     . liveIn(resident,house)
-    . on(house,land) %(AxOnHouseLand:p:1)%
+    . on(house) = land %(AxOnHouseLand:p:1)%
 end
 
 
@@ -48,31 +47,13 @@ spec Boat = Base then
         passenger: Person
     preds
         ride: Person * Object
-        on : Object * Medium
+
     . ride(passenger,boat)
-    . on(boat,water) %(AxOnBoatWater:p:1)%
+    . on(boat) = water %(AxOnBoatWater:p:1)%
 end
 
 %% The best blend of this specification is:
-%% spec BestBlend = 
-%% sorts Medium, Object, Person
-%% op boat_house : Object
-%% op land : Medium
-%% op passenger_resident : Person
-%% op water : Medium
-%% pred on : Object * Medium
-%% pred ride_liveIn : Person * Object
 
-%% . ride_liveIn(passenger_resident, boat_house) %(Ax1)%
-
-%% . not land = water %(ga_disjoint_land_water)%
-
-%% generated type Medium ::= land | water %(ga_generated_Medium)%
-
-%% . on(boat_house, land) %(AxOnHouseLand:p:1)%
-
-%% . on(boat_house, water) %(AxOnBoatWater:p:1)%
-%% end
 
 
 
