@@ -35,7 +35,7 @@ spec House = Base then
     preds
         liveIn: Person * Object
         
-    . moving(house)
+    . not moving(house)
     . liveIn(resident,house)
     . on(house) = land %(AxOnHouseLand:p:1)%
 end
@@ -48,7 +48,7 @@ spec Boat = Base then
     preds
         ride: Person * Object
 
-    . not moving(boat)
+    . moving(boat)
     . ride(passenger,boat)
     . on(boat) = water %(AxOnBoatWater:p:1)%
 end

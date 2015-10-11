@@ -1,4 +1,4 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% This contains the LP interface for the amalgams module for the language CASL, extended with priorities. 
 %% OUTPUT:
 %% The module triggers the following atoms which are needed in the language-independent part of the amalgamation module:
@@ -8,12 +8,12 @@
 %% 		-- a(<act>) 					%% the declaration of an operation
 %%		-- poss(<act>,<spec>,t)			%% the language specific precondition of an operation
 %%		-- cost(<act>,<spec>,<cost>)	%% the cost of an action
-%%		-- val(<act>,<spec>,<cost>)		%% the value of an action
+%%		-- renameAct(<act>,<spec>) 		%% This atom states whether an action is a renaming action
 %% INPUT:
 %% The module relies on the following axioms which are produced by the language-independent part of the amalgamation module:
 %% 1. Execution of an operation
 %% 		-- exec(<act>,<spec>,t)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -22,9 +22,6 @@
 
 %%% The base program is iteration independent. These are just some auxiliary predicates.
 #program  base. 
-
-% The specification that provides the vocabulary is the one with the lowest id (for now). 
-%% specProvidesVocabulary(Spec1) :- spec(Spec1), hasId(Spec1,Id1), 0{spec(Spec2) : hasId(Spec2,Id2), Id2 > Id1}0.
 
 %%%% Operator declaration %%%%
 
@@ -49,7 +46,10 @@ a(renameSort(Sort1,Sort2,Spec2),Spec1) 	:- 	hasSort(Spec1,Sort1,0), hasSort(Spec
 % Generalising sorts  -- Note: Unfortunately, the second argument in the action (SortP) is required later for the Python code, to determine to which sort to rename. This can be optimised...
 a(genSort(Sort,SortP),Spec) 	:- 	hasSort(Spec,Sort,0), isNonDataSort(Spec,Sort), hasParentSort(Spec,Sort,SortP,0).
 
-
+% Determine which actions are renaming actions
+renameAct(renamePred(Pred1,Pred2,Spec2),Spec1) :- a(renamePred(Pred1,Pred2,Spec2),Spec1).
+renameAct(renameOp(Op1,Op2,Spec2),Spec1) :- a(renameOp(Op1,Op2,Spec2),Spec1).
+renameAct(renameSort(Sort1,Sort2,Spec2),Spec1) :- a(renameSort(Sort1,Sort2,Spec2),Spec1).
 
 %%%% Cost of actions %%%%
 % Cost of removal actions is equal to priority of the elements to be removed.  
@@ -57,22 +57,10 @@ cost(rmOp(Op),Spec,C) 		:- a(rmOp(Op),Spec), 		opHasPriority(Spec,Op,C).
 cost(rmPred(Pred),Spec,C) 	:- a(rmPred(Pred),Spec), 	predHasPriority(Spec,Pred,C).
 cost(rmSort(Sort),Spec,C) 	:- a(rmSort(Sort),Spec), 	sortHasPriority(Spec,Sort,C).
 cost(rmAx(Ax),Spec,C) 		:- a(rmAx(Ax),Spec), 		axHasPriority(Spec,Ax,C).
-% Value of renaming actions is equal to priority.
-val(renameOp(Op1,Op2,Spec2),Spec1,V)		:- a(renameOp(Op1,Op2,Spec2),Spec1),			opHasPriority(Spec1,Op1,P),		V = P.
 
-val(renamePred(Pred1,Pred2,Spec2),Spec1,V)	:- a(renamePred(Pred1,Pred2,Spec2),Spec1),		predHasPriority(Spec1,Pred1,P),	V = P.
+%% Cost of generalising a sort is equal to cost of removing the sort. The actual total cost in the blending process will still be different compared to the removal, because axioms and operators that involve a sort remain when generalising the sort, whereas in the case of removing, these have to be removed, too. 
 
-val(renameSort(Sort1,Sort2,Spec2),Spec1,V)	:- a(renameSort(Sort1,Sort2,Spec2),Spec1),		sortHasPriority(Spec1,Sort1,P),	V = P.
-
-% Q: What is the cost of generalising a sort?
-% 1) child sort has higher priority (Pc) than parent sort (Pp), i.e., Pc > Pp. A: Cost is Pc - Pp. 
-% 2) child sort has lower priority (Pc) than parent sort (Pp), i.e., Pc < Pp. 
-
-% Solution1: Make an assertion that the priority of parent sorts is always higher than the sum of priority of child sorts. Hence, only case 2) will appear.  ---> NO! Not a solution because when removing sorts, the cost of removing accumulates any ways because one first has to remove child sorts, and then the parent sorts. Hence, the total cost for removing a parent sort is the sum of cost for removing all child sorts plus the actual cost for removing the parent sort. 
-
-% A: In all cases, it is the cost of removing the sort. The actual total cost in the blending process will then be different compared to the removal, because axioms and operators that involve a sort remain when generalising, whereas in the case of removing, these have to be removed, too. 
-
-cost(genSort(Sort,SortP),Spec,C)	:- a(genSort(Sort,SortP),Spec),		sortHasPriority(Spec,Sort,P), C = P.
+cost(genSort(Sort,SortP),Spec,C)	:- a(genSort(Sort,SortP),Spec),		sortHasPriority(Spec,Sort,C).
 
 %%% Start to iterate over t.
 #program cumulative(t).
@@ -82,12 +70,16 @@ cost(genSort(Sort,SortP),Spec,C)	:- a(genSort(Sort,SortP),Spec),		sortHasPriorit
 %%% Removal Operators
 % Remove Operator
 poss(rmOp(Op),Spec,t) 		:- 	hasOp(Spec,Op,t),	removableOp(Spec,Op), exOtherSpecWithoutOp(Spec,Op,t),
+								not inCrossSpaceMap(Op,t),
 								0{hasAxiom(Spec,Ax,t) : axInvolvesPredOp(Spec,Ax,Op,t)}0.
+								
 exOtherSpecWithoutOp(Spec1,Op,t) :- hasOp(Spec1,Op,t), not hasOp(Spec2,Op,t), spec(Spec2), Spec1 != Spec2. 
 
 % Remove Predicate
 poss(rmPred(Pred),Spec,t) 	:- 	hasPred(Spec,Pred,t), removablePred(Spec,Pred), exOtherSpecWithoutPred(Spec,Pred,t), 
+								not inCrossSpaceMap(Pred,t),
 								0{hasAxiom(Spec,Ax,t) : axInvolvesPredOp(Spec,Ax,Pred,t)}0.
+																
 exOtherSpecWithoutPred(Spec1,Pred,t) :- hasPred(Spec1,Pred,t), not hasPred(Spec2,Pred,t), spec(Spec2), Spec1 != Spec2. 
 
 % Remove Axiom
@@ -97,7 +89,9 @@ exOtherSpecWithoutEqivAx(Spec1,Ax,t) 	:- 	hasAxiom(Spec1,Ax,t), 0{axEquivalent(S
 % Remove Sort 
 poss(rmSort(Sort),Spec,t) 	:- 	hasSort(Spec,Sort,t), removableSort(Spec,Sort), exOtherSpecWithoutSort(Spec,Sort,t),
 								isNotParentSort(Spec,Sort,t),
+								not inCrossSpaceMap(Sort,t),
 								noOpUsesSort(Spec,Sort,t), noPredUsesSort(Spec,Sort,t), noAxUsesSort(Spec,Sort,t).
+								
 exOtherSpecWithoutSort(Spec1,Sort,t) :- hasSort(Spec1,Sort,t), not hasSort(Spec2,Sort,t), spec(Spec2), Spec1 != Spec2. 								
 
 isNotParentSort(Spec,Sort,t) 	:- 	0{hasParentSort(Spec,_,Sort,t)}0, 							hasSort(Spec,Sort,t).
@@ -114,7 +108,6 @@ poss(renameOp(Op1,Op2,Spec2),Spec1,t) :- 	a(renameOp(Op1,Op2,Spec2),Spec1),
 											not hasOp(Spec1,Op2,t), not hasOp(Spec2,Op1,t),
 											removableOp(Spec1,Op1),
 											specProvidesVocabulary(Spec2).
-%% poss(renamedToOp(Op2),Spec2,t) :- exec(renameOp(_,Op2,Spec2),_,t). 											
 
 %%% Rename Predicate
 poss(renamePred(Pred1,Pred2,Spec2),Spec1,t) :- 	a(renamePred(Pred1,Pred2,Spec2),Spec1), 
@@ -124,7 +117,7 @@ poss(renamePred(Pred1,Pred2,Spec2),Spec1,t) :- 	a(renamePred(Pred1,Pred2,Spec2),
 												not hasPred(Spec1,Pred2,t), not hasPred(Spec2,Pred1,t),
 												removablePred(Spec1,Pred1),
 												specProvidesVocabulary(Spec2).
-%% poss(renamedToPred(Pred2),Spec2,t) :- exec(renamePred(_,Pred2,Spec2),_,t). 																							
+
 %%% Rename Sort
 poss(renameSort(Sort1,Sort2,Spec2),Spec1,t) :- 	a(renameSort(Sort1,Sort2,Spec2),Spec1), 
 												hasSort(Spec1,Sort1,t), hasSort(Spec2,Sort2,t), 
@@ -135,12 +128,26 @@ poss(renameSort(Sort1,Sort2,Spec2),Spec1,t) :- 	a(renameSort(Sort1,Sort2,Spec2),
 %%% Generalise sort
 poss(genSort(Sort,SortP),Spec,t) :- 	a(genSort(Sort,SortP),Spec), 
 										removableSort(Spec,Sort),
-										%% not exec(rmSort(Sort),Spec,t), not exec(renameSort(Sort,_,_),Spec,t),
+										not inCrossSpaceMap(Sort,t),
 										hasSort(Spec,Sort,t), hasParentSort(Spec,Sort,SortP,t).
+										
 								
-								
+%%% Cross Space Mapping
+eleRenamed(E1,Spec1,E2,Spec2,t) :- exec(renamePred(E1,E2,Spec2),Spec1,t).
+eleRenamed(E1,Spec1,E2,Spec2,t) :- exec(renameOp(E1,E2,Spec2),Spec1,t).
+eleRenamed(E1,Spec1,E2,Spec2,t) :- exec(renameSort(E1,E2,Spec2),Spec1,t).
+crossSpaceMap(E1,Spec1,E2,Spec2,t+1) :- eleRenamed(E1,Spec1,E2,Spec2,t).
+crossSpaceMap(E1,Spec1,E2,Spec2,t+1) :- crossSpaceMap(E1,Spec1,E2,Spec2,t).
+inCrossSpaceMap(E,t) :- crossSpaceMap(E,_,_,_,t).
+inCrossSpaceMap(E,t) :- crossSpaceMap(_,_,E,_,t).
+finalCrossSpaceMap(E1,Spec1,E2,Spec2,t) :- crossSpaceMap(E1,Spec1,E2,Spec2,t), findCrossSpaceMapPhaseFinished(t), not findCrossSpaceMapPhaseFinished(t-1).
 
-								
+%%% Parent sorts in the cross space mapping must also be mapped. This can probably be improved by placing a corresponding condition in the renaming of sorts action precondition. 
+#external query(t).
+:- query(t), crossSpaceMap(E1,Spec1,E2,Spec2,t), hasSort(Spec1,E1,t), hasSort(Spec2,E2,t), hasParentSort(Spec1,E1,E1P,t), hasParentSort(Spec2,E2,E2P,t), not crossSpaceMap(E1P,Spec1,E2P,Spec2,t).
+
+#program cumulative(t).
+
 %%%% Equality of conceptual spaces %%%%
 
 notEqual(Spec1,Spec2,t) :- opNotEquivalent(Spec1,Spec2,_,t).

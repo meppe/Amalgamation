@@ -17,7 +17,7 @@ s(t).
 
 %%% We have a total (or partial) priority order on predicates, operators and axioms, and generalisations should account for that order. Hence, we assign a cost to removal actions that coincides with the priority of the axiom, operator, predicate or sort to remove. This allows us to define when a generalisation action is optimal, i.e., when there is no cheaper action for which the preconditions are met.  Then we count the number of non-optimal generalisation operations as the number of operations that do not respect the priority order. This is used to prune the search space. 
 stepValue(A,Spec,-C,t)	 :- poss(A,Spec,t), cost(A,Spec,C).
-stepValue(A,Spec,V,t)	 :- poss(A,Spec,t), val(A,Spec,V).
+%% stepValue(A,Spec,V,t)	 :- poss(A,Spec,t), val(A,Spec,V).
 
 %% Count the number of non-optimal actions.
 %% These all slow things down heavily... Why is that? Hypothesis: its because of comparison ">".
@@ -37,16 +37,33 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 %%%%%%%%%%%%%%%%%%%%%%%
 %%% Generating Part %%%
 %%%%%%%%%%%%%%%%%%%%%%%
-
+%% Determine when an action is not a renaming action
+nonRenameAct(A,Spec) :- a(A,Spec), not renameAct(A,Spec).
 %% %% % Generate generalization search space. If the generic space is not yet reached, execute a generalization operation. 
 %% 0{exec(A,Spec,t) : a(A,Spec),  poss(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
 %% This is much faster, but also much more restrictive, because it only allows optimal generalisations:
 %% 0{exec(A,Spec,t) : a(A,Spec),  isOptimal(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
 %% This allows only one generalisation on one of the specifications at a time. 
-1{exec(A,Spec,t) : a(A,Spec), poss(A,Spec,t)}1 :- notGenericReached(t).
+1{exec(A,Spec,t) : nonRenameAct(A,Spec), poss(A,Spec,t)}1 :- notGenericReached(t), findCrossSpaceMapPhaseFinished(t).
 %% This allows only one generalisation on one of the specifications at a time, with necessity of optimal steps. Note that this sometimes leads to unsatisfiability. 
 %% 1{exec(A,Spec,t) : isGloballyOptimal(A,Spec,t), poss(A,Spec,t)}1 :- notGenericReached(t).
 
+%% First identify the cross-space-mapping by applying renaming actions
+1{exec(A,Spec,t) : renameAct(A,Spec), poss(A,Spec,t)}1 :- not findCrossSpaceMapPhaseFinished(t).
+
+%% Decide where cross space mapping phase is over or not. 
+%% This produces the maximal cross space mapping because no further renaming action is possible. 
+%% findCrossSpaceMapPhaseFinished(t) :- 0{ poss(A,Spec,t) : renameAct(A,Spec)}0.
+%% This produces subsets of the maximal cross space mapping. After each step, the search for the cross domain mapping may or may not have finished.
+0{findCrossSpaceMapPhaseFinished(t)}1 :- not findCrossSpaceMapPhaseFinished(t-1).
+%% Once the generic space finding phase is finished, it is finished forever.
+findCrossSpaceMapPhaseFinished(t) :- findCrossSpaceMapPhaseFinished(t-1).
+%% Some debug assertion: It should not happen, that the cross space mapping phase was finished and now renaming is possible again. 
+xxx_assertion_xxx(crossSpaceMappingPhaseShouldBeOver,t) :- findCrossSpaceMapPhaseFinished(T), T < t, not findCrossSpaceMapPhaseFinished(t).
+#show xxx_assertion_xxx/2.
+
+%% #show nonRenameAct/2.
+%% #show nonRenameAct/2.
 %%%%%%%%%%%%%%%%%%%%
 %%% Testing Part %%%
 %%%%%%%%%%%%%%%%%%%%
@@ -66,9 +83,11 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 
 
 
-#show s/1.
-#show notGenericReached/1.
+%% #show s/1.
+%% #show notGenericReached/1.
 #show exec/3.
+%% #show findCrossSpaceMapPhaseFinished/1.
+#show finalCrossSpaceMap/5.
 
 %%%%%%%%% DEBUG OUTPUT %%%%%%%%%%%%%
 %% stepValueAtT(A,Spec,V) :- stepValue(A,Spec,V,t), t = 0, poss(A,Spec,t).

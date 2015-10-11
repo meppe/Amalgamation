@@ -42,6 +42,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
 
     # Now iterate over all generalisation tuples. 
     for spaceTuple in genInputSpaceTuples:
+        genAction =  spaceTuple.nextGenAction
         for specName,spec in spaceTuple.specs.iteritems():
             # Only specify this spec if it has not been specified already.              
             if spec.name != lastSpecs[specName]:
@@ -51,8 +52,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
 
                 specStr = "spec " + spec.name + " = " + lastSpecName
                 
-                # # Depending on the action type, write mapping (renamings and sort generalisation) or add elements (removal)
-                genAction =  spaceTuple.nextGenAction
+                # # Depending on the action type, write mapping (renamings and sort generalisation) or add elements (removal)                
                 if "actType" in genAction.keys():
                     # print "The generalisation action to reach " + spec.name + " is: "
                     # print genAction
@@ -111,13 +111,15 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                 mapFromGenericStr += specRenamings[specName]
                 mapFromGenericStr += " end \n\n" 
 
-                # cstr = cstr +   spec.toCaslStr() + "\n\n" + mapFromGenericStr
                 cstr = cstr +   specStr + "\n\n" + mapFromGenericStr
 
-        # State blends (colimit operation)
+        # State blends, but only if the last action was not a renaming, because in this case the cross-space-mapping has not yet been found. 
+        if "actType" in genAction.keys(): 
+            if genAction["actType"] in ["renamePred","renameSort","renameOp"]:
+                continue
+        
+        # Compute blend value
         value = spaceTuple.getBlendValue()
-        # for value in sorted(blendCombis.keys(),reverse=True):
-        # print "value of blend: " + str(value) + " -- minValue: "  + str(minBlendValueToConsider)
         if value < minBlendValueToConsider:
             continue
         if value not in blendNames.keys(): 
@@ -394,13 +396,13 @@ def writeBlends(blends):
                 os.system("rm " + fName)
                 os.system("rm *.th")    
                 continue
-            # The following lines are a quickfix to forbid identical blends with a different value, as described in the README.md. It just removes idenitcal existing blends with a lower value. 
-            if blendFNameValues[explicitBlendStr][0] < value:
-                # print " same blend with lower value exists. removing " + blendFNameValues[explicitBlendStr][1]
-                os.system("rm " + blendFNameValues[explicitBlendStr][1])
-                os.system("rm " + blendFNameValues[explicitBlendStr][1][:-5]+"_Blend.casl")
-                # os.system("rm *.th")    
-                # continue
+            # # The following lines are a quickfix to forbid identical blends with a different value, as described in the README.md. It just removes idenitcal existing blends with a lower value. 
+            # if blendFNameValues[explicitBlendStr][0] < value:
+            #     # print " same blend with lower value exists. removing " + blendFNameValues[explicitBlendStr][1]
+            #     os.system("rm " + blendFNameValues[explicitBlendStr][1])
+            #     os.system("rm " + blendFNameValues[explicitBlendStr][1][:-5]+"_Blend.casl")
+            #     # os.system("rm *.th")    
+            #     # continue
 
         blendFNameValues[explicitBlendStr] = [value,fName]
                 
@@ -423,10 +425,9 @@ def writeBlends(blends):
 
         if genExplicitBlendFiles == True:
             os.system("cp " + thName + " " + thName[:-3]+".casl")
-            os.system("rm *.th")
             blendFilesList += thName[:-3]+".casl\n"
         
-        # blendFilesList += fName
+        os.system("rm *.th")
         
         bNum = bNum + 1
 

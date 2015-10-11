@@ -83,10 +83,10 @@ def main(prg):
     ## Prepare internal data structure for the later blending. 
     global inputSpaceNames, inputSpaces, inputFile
 
+    ## These are the blends. 
     global blends
     
     print "Starting main iteration loop. Reading input spaces."
-
 
     inputSpacesXmlFileName = input2Xml(inputFile,inputSpaceNames) 
     inputSpaces = parseXml(inputSpacesXmlFileName)
@@ -103,16 +103,8 @@ def main(prg):
 
     ## We append the base1 part of the Logic Program. (See e.g. generalize.lp to see which part this is.)
     parts.append(("base", []))
-    
-    # These external options are currentl not working. They are intended to disallow generalization operations for particuar domains to improve searhc performance. For now, to realise this, (de)comment respective rules in generalize.lp file manually.
-    
-    # if rmOpAllowed : prg.assign_external(Fun("rmOpAllowed", [] ), True)
-    # if rmPredAllowed : prg.assign_external(Fun("rmPredAllowed", []), True)
-    # if rmAxAllowed : prg.assign_external(Fun("rmAxAllowed", []), True)
-        
-    # #### First, find a path to the generic space
-
-    # # The main generalization loop starts here!
+            
+    ## The main loop to find the generic space starts here!
     while True:
         # Abort after the max. number of iterations 
         if stepGeneralize > imax: break
@@ -121,20 +113,17 @@ def main(prg):
         # # Ground the new slice
         prg.ground(parts)
         parts = []
-        # Release the query1(t) atom from the last slice (step-1) from the program. 
+        # Release the query(t) atom from the last slice (step-1) from the program. 
         prg.release_external(Fun("query", [stepGeneralize-1]))
-        # Add the atom query1(t) of this slice to the program. 
+        # Add the atom query(t) of this slice to the program. 
         prg.assign_external(Fun("query", [stepGeneralize]), True)
 
         # Find Stable Models for this generalization iteration
-        ret = prg.solve(None, onModelGeneralize)
-        # with prg.solve_iter() as it:
-        #     for model in prg.solve_iter():
-        #         printModel(model)                
-                
+        ret = prg.solve(None, onModelGeneralize)                  
 
         # If Stable Models are found and we are beyond the minimal number of slices, break loop.
-        if stepGeneralize >= (imin-1) and (ret == SolveResult.SAT): break
+        if stepGeneralize >= (imin-1) and (ret == SolveResult.SAT): 
+            break
         stepGeneralize = stepGeneralize+1
 
     writeBlends(blends)

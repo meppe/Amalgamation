@@ -6,7 +6,7 @@ inputFile = "examples/minimal.casl"
 inputSpaceNames = ["S1","S2"]
 
 ###### The number of models to be generated (0 for all models)
-numModels = 10
+numModels = 100
 
 ###### The minimal number of iterations for generalization
 minIterationsGeneralize = 1
@@ -22,11 +22,8 @@ eproverTimeLimit = 4
 darwinTimeLimit = 0 ### 0 means that we don't use darwin at all. 
 
 ###### Consistency check: brave or careful
-consistencyCheckBehavior = "brave" ### If we can not prove consistency, we assume the blend is consistent
+consistencyCheckBehavior = "brave" ### If we can not prove inconsistency, we assume the blend is consistent
 # consistencyCheckBehavior = "careful"  ### If we can not prove consistency, we assume the blend is inconsistent
-
-###### A switch to determine whether to perform only one generalisation per step in total, or one generalisation per step per specification. The former makes the system more transparent, and gives one blend per stable model. The later makes the ASP solving faster, but it is more "hacky" in that the same blends can be generated multiple times. 
-singleGenPerStep = True
 
 ###### Path to the HETS executable ######
 useHetsAPI = 0
@@ -34,7 +31,7 @@ hetsUrl = 'http://localhost:8000/'
 hetsExe = 'hets'
 
 ###### Switch to enable the explicit generation of blend files (see function writeBlends.py) ######
-genExplicitBlendFiles = True
+genExplicitBlendFiles = False
 
 ###### A switch to determine whether to only generalise or whether to also  (mostly for debugging...)
 generaliseOnly = False
@@ -78,6 +75,7 @@ renamingMode = "mergeNames"
 
 # inputFile = "examples/AIJ-paper/HouseBoat_GoguenWebsite.casl"
 # inputFile = "examples/AIJ-paper/HouseBoat_simple.casl"
-inputFile = "examples/AIJ-paper/HouseBoat_movingProp.casl"
+inputFile = "examples/AIJ-paper/HouseBoat_movingProp.casl" %% This works very well, results as expected. 
+# inputFile = "examples/AIJ-paper/BoatHouse.casl"
 inputSpaceNames = ["House","Boat"]
 
