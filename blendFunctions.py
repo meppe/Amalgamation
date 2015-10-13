@@ -10,6 +10,7 @@ import json
 def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
     global blendValuePercentageBelowMinToKeep, renamingMode, consistencyCheckBehavior
 
+    modelAtomsStr = "\n".join(modelAtoms)
     if highestValue == -sys.maxint:
         minBlendValueToConsider = -sys.maxint
     else:
@@ -201,7 +202,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                     combi[toLPName(combiParts[i],'spec')] = combiParts[i+1]
                     i += 2
 
-                blendInfo = {"combi": combi, "prettyHetsStr" : prettyBlendStr, "blendName" : blendName, "value" : value}
+                blendInfo = {"combi": combi, "prettyHetsStr" : prettyBlendStr, "blendName" : blendName, "value" : value, "genModel" : modelAtomsStr}
                 consistentFound = True
                 # If a better blend was found, delete all previous blends. 
                 if value > highestValue:
@@ -353,6 +354,8 @@ def writeBlends(blends):
     # existingBlends = Set()
     blendFNameValues = {}
     for blend in blends:
+
+        modelStr = "-".join(blend[""])
 
         blendStr = blend["prettyHetsStr"]
         fName = blend["blendName"] + "_b_"+str(bNum)+".casl"

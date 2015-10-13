@@ -6,17 +6,18 @@ inputFile = "examples/minimal.casl"
 inputSpaceNames = ["S1","S2"]
 
 ###### The number of models to be generated (0 for all models)
-numModels = 1
+numModels = 10
 
 ###### The maximal number of iterations for generalization
 maxIterationsGeneralize = 20
 
 ###### Percentage of blend value below the currently highest value found so far that we want to keep in the results. 0 means that we only keep the blends with the highest value found so far, 100 means to consider all blends.
-blendValuePercentageBelowHighestValueToKeep = 30
+blendValuePercentageBelowHighestValueToKeep = 40
 
-###### Time limit for eprover and darwin consistency check in seconds CPU time
+###### Time limit for eprover and darwin consistency check, and for clingo (ASP solving), in seconds CPU time
 eproverTimeLimit = 4
 darwinTimeLimit = 0 ### 0 means that we don't use darwin at all. 
+clingoTimeLimit = 120
 
 ###### Consistency check: brave or careful
 consistencyCheckBehavior = "brave" ### If we can not prove inconsistency, we assume the blend is consistent

@@ -8,6 +8,7 @@
 import os, sys, time, subprocess
 
 
+
 # Set path for additional import files
 lp_path = os.path.abspath(os.getcwd())
 sys.path.append(lp_path)
@@ -44,7 +45,7 @@ def onModelGeneralize(model):
     modelStr = getModel(model)
     print modelStr
     ## If there is a cross space mapping found, don't stop solving
-    if modelStr.find("finalCrossSpaceMap") == -1:
+    if modelStr.find("finalCrossSpaceMap") > -1:
         print "Cross space mapping found. Not terminating generalisation."
         continueSolving = True 
 
@@ -69,7 +70,7 @@ def onModelGeneralize(model):
 
         
 
-    writeBlends(blends)
+    # writeBlends(blends)
         
         # jsonOutput = writeJsonOutput(blends,inputSpaceNames)
         # blendJsonList = jsonOutput['blendList']       
@@ -116,7 +117,7 @@ def main(prg):
     global inputSpaceNames, inputSpaces, inputFile
 
     ## These are the blends. 
-    global blends, continueSolving
+    global blends, continueSolving, clingoTimeLimit
     
     print "Starting main iteration loop. Reading input spaces."
 
@@ -151,7 +152,15 @@ def main(prg):
         # Determine whether or not to continue solving. The global var is set in onModelGeneralise
         continueSolving = False
         # Find Stable Models for this generalization iteration
+        start = time.clock()
         ret = prg.solve(None, onModelGeneralize)                  
+        end = time.clock()
+        elapsed = (end - start)
+        print "time for solving elapsed:" + str(elapsed) + " sec."
+        raw_input()
+        if elapsed * 1.01 >= clingoTimeLimit:
+            print " Time limit for ASP solving exceeded. Aborting ASP generalisation search."
+            break
 
         # If Stable Models are found and we are stop solving, break loop.
         if ret == SolveResult.SAT:

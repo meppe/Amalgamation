@@ -95,8 +95,8 @@ genericReached(t) :- not notGenericReached(t).
 %% stepValueAtT(A,Spec,V) :- stepValue(A,Spec,V,t), t = 0, poss(A,Spec,t).
 %% #show stepValueAtT/3.
 %% In the houseboat example, the po_boat must be renamed to po_resident at some point. Assert this here:
-#program cumulative(t).
-execOfInterestFound(t) :- exec(renameOp(po_boat,po_resident,spec_House),spec_Boat,T), s(T).
-execOfInterestNotFound(t) :- not execOfInterestFound(t).
-#external query(t).
-:- query(t), execOfInterestNotFound(t).
+%% #program cumulative(t).
+%% execOfInterestFound(t) :- exec(renameOp(po_boat,po_resident,spec_House),spec_Boat,T), s(T).
+%% execOfInterestNotFound(t) :- not execOfInterestFound(t).
+%% #external query(t).
+%% :- query(t), execOfInterestNotFound(t).
