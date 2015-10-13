@@ -50,6 +50,7 @@ a(genSort(Sort,SortP),Spec) 	:- 	hasSort(Spec,Sort,0), isNonDataSort(Spec,Sort),
 renameAct(renamePred(Pred1,Pred2,Spec2),Spec1) :- a(renamePred(Pred1,Pred2,Spec2),Spec1).
 renameAct(renameOp(Op1,Op2,Spec2),Spec1) :- a(renameOp(Op1,Op2,Spec2),Spec1).
 renameAct(renameSort(Sort1,Sort2,Spec2),Spec1) :- a(renameSort(Sort1,Sort2,Spec2),Spec1).
+%% renameAct(genSort(Sort,SortP),Spec) :- a(genSort(Sort,SortP),Spec).
 
 %%%% Cost of actions %%%%
 % Cost of removal actions is equal to priority of the elements to be removed.  
@@ -125,11 +126,11 @@ poss(renameSort(Sort1,Sort2,Spec2),Spec1,t) :- 	a(renameSort(Sort1,Sort2,Spec2),
 												not hasSort(Spec1,Sort2,t), not hasSort(Spec2,Sort1,t),
 												removableSort(Spec1,Sort1),
 												specProvidesVocabulary(Spec2).
-%%% Generalise sort
-poss(genSort(Sort,SortP),Spec,t) :- 	a(genSort(Sort,SortP),Spec), 
-										removableSort(Spec,Sort),
-										not inCrossSpaceMap(Sort,t),
-										hasSort(Spec,Sort,t), hasParentSort(Spec,Sort,SortP,t).
+%%% Generalise sort (Currently buggy. There is a problem that if two sorts in one spec get generalised to the same parent sort, the mappings are ambiguous when coming from the Generic Space upwards. E.g. Thing -> House and at the same time Thing -> Resident.)
+%% poss(genSort(Sort,SortP),Spec,t) :- 	a(genSort(Sort,SortP),Spec), 
+%% 										removableSort(Spec,Sort),
+%% 										not inCrossSpaceMap(Sort,t),
+%% 										hasSort(Spec,Sort,t), hasParentSort(Spec,Sort,SortP,t).
 										
 								
 %%% Cross Space Mapping

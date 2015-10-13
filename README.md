@@ -61,5 +61,6 @@ If you look at the settings.py, you'll also find a cadence fusion example to obt
 	- Each element in a spec can be only renamed once. Therefore, it is currently not possible to have more than two input specs. To change this, one has to change stuff in the function findLeastGeneralizedBlends, and in the amalgamTmp.casl file generation.
 	- Another reason why only two input specs are supported is that the cross space mapping is currently designed for two input specs. 
 	- Currently, the cross-space-mapping phase in the generalisation leads to several stable models with the same cross space mapping. This should not happen, because it slows things down and generates duplicate blends. Maybe we can define a total order for applying renaming actions to prevent this and to prune the search space. 
+	- There is a problem that if two sorts in one spec get generalised to the same parent sort, the mappings are ambiguous when coming from the Generic Space upwards. E.g. Thing -> House and at the same time Thing -> Resident. 
 
 

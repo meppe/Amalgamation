@@ -50,7 +50,8 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                 lastSpecName = lastSpecs[specName]
                 lastSpecs[specName] = spec.name
 
-                specStr = "spec " + spec.name + " = " + lastSpecName
+                specStr = "spec " + spec.name + " = " + lastSpecName       
+                altSpecStr = "spec " + spec.name + " = " + lastSpecName + " then "
                 
                 # # Depending on the action type, write mapping (renamings and sort generalisation) or add elements (removal)                
                 if "actType" in genAction.keys():
@@ -59,7 +60,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                     if genAction["actType"] in ["renamePred","renameSort","renameOp","genSort"]:
                         eleFrom = lpToCaslStr(genAction['argVect'][1])
                         eleTo = lpToCaslStr(genAction['argVect'][0]) 
-                        if renamingMode == "mergeNames":
+                        if renamingMode == "mergeNames" and genAction["actType"] != "genSort":
                             generalEleName = eleTo + "_" + eleFrom
                         else:
                             generalEleName = eleFrom
@@ -104,7 +105,8 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                             if axId == str(ax.id):
                                 specStr = specStr + ax.toCaslStr()
                                 break
-                    
+                
+                specStr += "\nend\n\n"   
                 mapFromGenericStr = "view GenTo"+spec.name+" : Generic to "+spec.name
                 if specRenamings[specName] != "":
                     mapFromGenericStr += " = " 
@@ -112,8 +114,9 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                 mapFromGenericStr += " end \n\n" 
 
                 cstr = cstr +   specStr + "\n\n" + mapFromGenericStr
+                # cstr = cstr +   spec.toCaslStr() + "\n\n" + mapFromGenericStr
 
-        # State blends, but only if the last action was not a renaming, because in this case the cross-space-mapping has not yet been found. 
+        # State blends, but only if the last action was not a renaming or sort generalisation, because in this case the cross-space-mapping has not yet been found. 
         if "actType" in genAction.keys(): 
             if genAction["actType"] in ["renamePred","renameSort","renameOp"]:
                 continue

@@ -8,15 +8,15 @@
 
 %%% The base program is iteration independent. These are just some auxiliary predicates.
 #program  base. 
-%% num(-50..50).
-%% bigger(V1,V) :- V1 > V, num(V1), num(V).
+%% Determine when an action is not a renaming action
+nonRenameAct(A,Spec) :- a(A,Spec), not renameAct(A,Spec).
 
 %%% Define steps
 #program cumulative(t).
 s(t).
 
 %%% We have a total (or partial) priority order on predicates, operators and axioms, and generalisations should account for that order. Hence, we assign a cost to removal actions that coincides with the priority of the axiom, operator, predicate or sort to remove. This allows us to define when a generalisation action is optimal, i.e., when there is no cheaper action for which the preconditions are met.  Then we count the number of non-optimal generalisation operations as the number of operations that do not respect the priority order. This is used to prune the search space. 
-stepValue(A,Spec,-C,t)	 :- poss(A,Spec,t), cost(A,Spec,C).
+%% stepValue(A,Spec,-C,t)	 :- poss(A,Spec,t), cost(A,Spec,C).
 %% stepValue(A,Spec,V,t)	 :- poss(A,Spec,t), val(A,Spec,V).
 
 %% Count the number of non-optimal actions.
@@ -24,7 +24,7 @@ stepValue(A,Spec,-C,t)	 :- poss(A,Spec,t), cost(A,Spec,C).
 %% isOptimal(A1,Spec,t) 	 :- poss(A1,Spec,t), stepValue(A1,Spec,V1,t), 0{ a(A2,Spec) : poss(A2,Spec,t), stepValue(A2,Spec,V2,t), V2 > V1  }0.
 %% nonOptimalSteps(N,Spec,t) :- spec(Spec), N = {a(A,Spec) : exec(A,Spec,T),  not isOptimal(A,Spec,T), T <= t}.
 
-isGloballyOptimal(A1,Spec1,t) :- poss(A1,Spec1,t), stepValue(A1,Spec1,V1,t), 0{ a(A2,Spec2) : poss(A2,Spec2,t), stepValue(A2,Spec2,V2,t), V2 > V1  }0.
+%% isGloballyOptimal(A1,Spec1,t) :- poss(A1,Spec1,t), stepValue(A1,Spec1,V1,t), 0{ a(A2,Spec2) : poss(A2,Spec2,t), stepValue(A2,Spec2,V2,t), V2 > V1  }0.
 %% nonGloballyOptimalSteps(N,t) :- N = {a(A,Spec) : exec(A,Spec,T),  not isGloballyOptimal(A,Spec,T), T <= t}.
 %% #show nonGloballyOptimalSteps/2.
 
@@ -37,8 +37,6 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 %%%%%%%%%%%%%%%%%%%%%%%
 %%% Generating Part %%%
 %%%%%%%%%%%%%%%%%%%%%%%
-%% Determine when an action is not a renaming action
-nonRenameAct(A,Spec) :- a(A,Spec), not renameAct(A,Spec).
 %% %% % Generate generalization search space. If the generic space is not yet reached, execute a generalization operation. 
 %% 0{exec(A,Spec,t) : a(A,Spec),  poss(A,Spec,t)}1 :- notGenericReached(t), spec(Spec).
 %% This is much faster, but also much more restrictive, because it only allows optimal generalisations:
@@ -78,10 +76,14 @@ xxx_assertion_xxx(crossSpaceMappingPhaseShouldBeOver,t) :- findCrossSpaceMapPhas
 %% :- nonGloballyOptimalSteps(N,t), N > 0.
 
 %% Disable models where the generic space is not yet reached. The external atom query(t) is induced into the Logic Program externally in the iterationCore-py.lp main loop.
+genericReached(t) :- not notGenericReached(t).
+#show genericReached/1.
+
 #external query(t).
 :- query(t), notGenericReached(t).
-
-
+:- query(t), genericReached(t), exec(A,Spec,t).
+:- query(t), notGenericReached(t), not exec(_,_,t).
+:- query(t), s(t), genericReached(t-1).
 
 %% #show s/1.
 %% #show notGenericReached/1.
@@ -92,4 +94,9 @@ xxx_assertion_xxx(crossSpaceMappingPhaseShouldBeOver,t) :- findCrossSpaceMapPhas
 %%%%%%%%% DEBUG OUTPUT %%%%%%%%%%%%%
 %% stepValueAtT(A,Spec,V) :- stepValue(A,Spec,V,t), t = 0, poss(A,Spec,t).
 %% #show stepValueAtT/3.
-
+%% In the houseboat example, the po_boat must be renamed to po_resident at some point. Assert this here:
+#program cumulative(t).
+execOfInterestFound(t) :- exec(renameOp(po_boat,po_resident,spec_House),spec_Boat,T), s(T).
+execOfInterestNotFound(t) :- not execOfInterestFound(t).
+#external query(t).
+:- query(t), execOfInterestNotFound(t).

@@ -1,0 +1,216 @@
+%% COINVENT House Boat example
+%% =================================
+%% ### Authors:
+%% - Manfred Eppe (meppe@iiia.csic.es)
+%% - Roberto Confalonieri (confalonieri@iiia.csic.es)
+%% This is the house boat example very similar to the version from Goguen's website: 
+%% https://cseweb.ucsd.edu/~goguen/papers/blend.html
+%% We start from HouseBat_simple, and add a moving predicate to indicate whether an object is moving.
+
+
+spec SemSys = 
+  sort PriorityDummySort
+  op prioDummyOp : PriorityDummySort
+end
+
+
+spec Data = 
+    free type Medium ::= land | water
+end
+
+
+%% spec Base = SemSys and Data end 
+
+%% spec House = Base then
+%%     sorts Resident House
+%%     op onH : House -> Medium
+%%     %% pred movingHouse : House
+%%     ops
+%%         house: House
+%%         resident: Resident
+%%     preds
+%%         liveIn: Resident * House
+        
+%%     . liveIn(resident,house)
+%%     . onH(house) = land %(AxonHLand:p:1)%
+%% end
+
+
+%% spec Boat = Base then
+%%     sorts Boat Passenger
+%%     op onB : Boat -> Medium
+%%     %% pred movingBoat : Boat
+%%     ops
+%%         boat: Boat
+%%         passenger: Passenger
+%%     preds
+%%         ride: Passenger * Boat
+
+%%     . ride(passenger,boat)
+%%     . onB(boat) = water %(AxOnBoatWater:p:1)%
+%% end
+
+%% These generate a blend with value 2400:
+%% spec Blend = 
+%% sorts Boat_Resident, Medium, Passenger_House
+%% op boat_resident : Boat_Resident
+%% op land : Medium
+%% op onB : Boat_Resident -> Medium
+%% op onH : Passenger_House -> Medium
+%% op passenger_house : Passenger_House
+%% op water : Medium
+%% pred liveIn : Boat_Resident * Passenger_House
+%% pred ride : Passenger_House * Boat_Resident
+
+%% . onH(passenger_house) = land %(AxonHLand:p:1)%
+
+%% . not land = water %(ga_disjoint_land_water)%
+
+%% generated type Medium ::= land | water %(ga_generated_Medium)%
+
+%% . onB(boat_resident) = water %(AxOnBoatWater:p:1)%
+
+%% . liveIn(boat_resident, passenger_house) %(Ax1)%
+
+%% . ride(passenger_house, boat_resident) %(Ax1_24)%
+%% end
+
+%% The blend is somewhat problematic, because it merges passenger and house which is quite unintuitive. In particular, that the passenger_house rides the boat_resident. In other words, the boat-house rides the boat that is in it. Furthermore, it should happen that onB and onH gets merged.
+
+
+%% spec Base = SemSys and Data then 
+%%     sort Thing    
+%%     pred inside: Thing * Thing
+%%     forall t1,t2 : Thing. 
+%%         inside(t1,t2) => not inside(t2,t1) %(Ax-inIsantisymmetric:p:-1)%
+%%     forall t1,t2,t3 : Thing. 
+%%         inside(t1,t2) /\ inside(t2,t3) => inside(t1,t3) %(Ax-inIsTransitive:p:-1)%
+%% end 
+
+%% spec House = Base then
+%%     sort Resident < Thing
+%%     sort House < Thing
+%%     op onH : House -> Medium
+%%     %% pred movingHouse : House
+%%     ops
+%%         house: House
+%%         resident: Resident
+%%     preds
+%%         livein: Resident * House
+        
+%%     . livein(resident,house)
+%%     . onH(house) = land %(Ax-OnHLand:p:1)%
+
+%%     forall h:House, r:Resident
+%%         . livein(r,h) => inside(r,h) %(Ax-LiveInGeneralIn:p:1)%
+%% end
+
+
+%% spec Boat = Base then
+%%     sort Boat < Thing
+%%     sort Passenger < Thing
+%%     op onB : Boat -> Medium
+%%     %% pred movingBoat : Boat
+%%     ops
+%%         boat: Boat
+%%         passenger: Passenger
+%%     preds
+%%         ride: Passenger * Boat
+
+%%     . ride(passenger,boat)
+%%     . onB(boat) = water %(Ax-OnBoatWater:p:1)%
+    
+%%     forall b:Boat,p:Passenger 
+%%         . ride(p,b) => inside(p,b) %(Ax-RideGeneralIn:p:1)%
+%% end
+
+
+%% This makes the following bland which has a value of 2850:
+%% spec Blend = sorts Boat_Resident, Medium, Passenger_House, Thing
+%% sorts Boat_Resident, Passenger_House < Thing
+%% op boat_resident : Boat_Resident
+%% op land : Medium
+%% op onB : Boat_Resident -> Medium
+%% op onH : Passenger_House -> Medium
+%% op passenger_house : Passenger_House
+%% op water : Medium
+%% pred inside : Thing * Thing
+%% pred livein : Boat_Resident * Passenger_House
+%% pred ride : Passenger_House * Boat_Resident
+
+%% . onH(passenger_house) = land %(AxonHLand:p:1)%
+
+%% forall h : Passenger_House; r : Boat_Resident
+%% . livein(r, h) => inside(r, h)             %(liveInGeneralIn:p:1)%
+
+%% forall t1, t2 : Thing . inside(t1, t2) => not inside(t2, t1)
+%%                                      %(Ax-inIsantisymmetric:p:-1)%
+
+%% forall t1, t2, t3 : Thing
+%% . inside(t1, t2) /\ inside(t2, t3) => inside(t1, t3)
+%%                                         %(Ax-inIsTransitive:p:-1)%
+
+%% . not land = water %(ga_disjoint_land_water)%
+
+%% generated type Medium ::= land | water %(ga_generated_Medium)%
+
+%% . onB(boat_resident) = water %(AxOnBoatWater:p:1)%
+
+%% . livein(boat_resident, passenger_house) %(Ax1)%
+
+%% forall b : Boat_Resident; p : Passenger_House
+%% . ride(p, b) => inside(p, b)                 %(RideGeneralIn:p:1)%
+%% end
+
+%% The problem with this blend is, that still passenger and house get merged.
+
+spec Base = SemSys and Data then 
+    sort Thing 
+    %% sort Container < Thing
+    %% sort Person < Thing
+    op on : Thing -> Medium
+    pred inside: Thing * Thing
+    forall t1,t2 : Thing. 
+        inside(t1,t2) => not inside(t2,t1) %(Ax-inIsantisymmetric:p:-1)%
+    forall t1,t2,t3 : Thing. 
+        inside(t1,t2) /\ inside(t2,t3) => inside(t1,t3) %(Ax-inIsTransitive:p:-1)%
+end 
+
+spec House = Base then
+    sort Resident < Thing
+    sort House < Thing
+
+    ops
+        house: House
+        resident: Resident
+    preds
+        livein: Resident * House
+        
+    . livein(resident,house) %(Ax-ResidentInHouse:p:1)%
+    . on(house) = land %(Ax-OnHLand:p:1)%
+
+    forall h:House, r:Resident
+        . livein(r,h) => inside(r,h) %(Ax-LiveInGeneralIn:p:1)%
+end
+
+
+spec Boat = Base then
+    sort Passenger < Thing
+    sort Boat < Thing
+
+    ops
+        boat: Boat
+        passenger: Passenger
+    preds
+        ride: Passenger * Boat
+
+    . ride(passenger,boat) %(Ax-PassengerInBoat:p:1)%
+    . on(boat) = water %(Ax-OnBoatWater:p:1)%
+    
+    forall b:Boat,p:Passenger 
+        . ride(p,b) => inside(p,b) %(Ax-RideGeneralIn:p:1)%
+end
+
+%% #1 genSort Resident -> Thing
+%% #2 rename Thing -> 
+

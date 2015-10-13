@@ -33,23 +33,43 @@ blends = []
 # Global variable to store the max. allowed cost for a blend. 
 highestValue = -sys.maxint
 
+continueSolving = True
+
 # This is called if a model is found.
 def onModelGeneralize(model):    
-    global inputFile, highestValue, blends, generaliseOnly
+    global inputFile, highestValue, blends, generaliseOnly, continueSolving, blendValuePercentageBelowHighestValueToKeep
     lpFileName = inputFile.split(".")[0]+".lp"
 
     print "Found generalisation:"
     modelStr = getModel(model)
     print modelStr
+    ## If there is a cross space mapping found, don't stop solving
+    if modelStr.find("finalCrossSpaceMap") == -1:
+        print "Cross space mapping found. Not terminating generalisation."
+        continueSolving = True 
+
+    # breakpoint = False
+    # if modelStr.find("exec(renameOp(po_boat,po_resident,spec_House),spec_Boat") > -1:
+    #     print "Exec of interest found"
+    #     breakpoint = True
+    #     oldBlendValuePercentageBelowHighestValueToKeep = blendValuePercentageBelowHighestValueToKeep
+    #     blendValuePercentageBelowHighestValueToKeep = 100
+        # raw_input()
+
+
     if generaliseOnly:
         return
+
+    oldBlends = copy.deepcopy(blends)
     [blends,blendingGeneralizationValue] = findLeastGeneralizedBlends(model.atoms(), inputSpaces, highestValue, blends) 
     # print blendingGeneralizationValue  
     if blendingGeneralizationValue >= highestValue and blendingGeneralizationValue > -sys.maxint:
         highestValue = blendingGeneralizationValue
         print "Found blend with a better or equal generalization value of  " + str(highestValue) + "."
 
-        # writeBlends(blends)
+        
+
+    writeBlends(blends)
         
         # jsonOutput = writeJsonOutput(blends,inputSpaceNames)
         # blendJsonList = jsonOutput['blendList']       
@@ -65,7 +85,19 @@ def onModelGeneralize(model):
         #        break;
         # print 'finished'
         # sys.stdout.flush()
-        
+
+    # if breakpoint:
+    #     blendValuePercentageBelowHighestValueToKeep = oldBlendValuePercentageBelowHighestValueToKeep
+    #     writeBlends(blends)
+    #     print "Blends written during breakpoint"
+    #     raw_input()
+
+    ## If no new blends were generated, stop solving
+    if blends != oldBlends:
+        print "New blends were generated. Not terminating generalisation."
+        continueSolving = True
+        # raw_input()
+
 
 def getModel(model):
     print "%% Generalisation model is as follows : \n"
@@ -84,7 +116,7 @@ def main(prg):
     global inputSpaceNames, inputSpaces, inputFile
 
     ## These are the blends. 
-    global blends
+    global blends, continueSolving
     
     print "Starting main iteration loop. Reading input spaces."
 
@@ -92,7 +124,6 @@ def main(prg):
     inputSpaces = parseXml(inputSpacesXmlFileName)
 
     ## Some abbreviations to make the code more compact:
-    imin   = minIterationsGeneralize
     imax   = maxIterationsGeneralize
     
     ## We start at step 0.
@@ -103,7 +134,7 @@ def main(prg):
 
     ## We append the base1 part of the Logic Program. (See e.g. generalize.lp to see which part this is.)
     parts.append(("base", []))
-            
+
     ## The main loop to find the generic space starts here!
     while True:
         # Abort after the max. number of iterations 
@@ -117,13 +148,16 @@ def main(prg):
         prg.release_external(Fun("query", [stepGeneralize-1]))
         # Add the atom query(t) of this slice to the program. 
         prg.assign_external(Fun("query", [stepGeneralize]), True)
-
+        # Determine whether or not to continue solving. The global var is set in onModelGeneralise
+        continueSolving = False
         # Find Stable Models for this generalization iteration
         ret = prg.solve(None, onModelGeneralize)                  
 
-        # If Stable Models are found and we are beyond the minimal number of slices, break loop.
-        if stepGeneralize >= (imin-1) and (ret == SolveResult.SAT): 
-            break
+        # If Stable Models are found and we are stop solving, break loop.
+        if ret == SolveResult.SAT:
+            if continueSolving == False:
+                break
+
         stepGeneralize = stepGeneralize+1
 
     writeBlends(blends)

@@ -6,16 +6,13 @@ inputFile = "examples/minimal.casl"
 inputSpaceNames = ["S1","S2"]
 
 ###### The number of models to be generated (0 for all models)
-numModels = 100
-
-###### The minimal number of iterations for generalization
-minIterationsGeneralize = 1
+numModels = 1
 
 ###### The maximal number of iterations for generalization
 maxIterationsGeneralize = 20
 
 ###### Percentage of blend value below the currently highest value found so far that we want to keep in the results. 0 means that we only keep the blends with the highest value found so far, 100 means to consider all blends.
-blendValuePercentageBelowHighestValueToKeep = 10
+blendValuePercentageBelowHighestValueToKeep = 30
 
 ###### Time limit for eprover and darwin consistency check in seconds CPU time
 eproverTimeLimit = 4
@@ -75,7 +72,7 @@ renamingMode = "mergeNames"
 
 # inputFile = "examples/AIJ-paper/HouseBoat_GoguenWebsite.casl"
 # inputFile = "examples/AIJ-paper/HouseBoat_simple.casl"
-inputFile = "examples/AIJ-paper/HouseBoat_movingProp.casl" %% This works very well, results as expected. 
-# inputFile = "examples/AIJ-paper/BoatHouse.casl"
+# inputFile = "examples/AIJ-paper/HouseBoat_movingProp.casl" # This works very well, results are as expected. 
+inputFile = "examples/AIJ-paper/BoatHouse.casl"
 inputSpaceNames = ["House","Boat"]
 
