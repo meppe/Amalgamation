@@ -8,7 +8,7 @@
 %% 		-- a(<act>) 					%% the declaration of an operation
 %%		-- poss(<act>,<spec>,t)			%% the language specific precondition of an operation
 %%		-- cost(<act>,<spec>,<cost>)	%% the cost of an action
-%%		-- renameAct(<act>,<spec>) 		%% This atom states whether an action is a renaming action
+%%		-- renameAct(<act>,<spec>) 		%% This atom states whether an action is a renaming action. If it is, it is considered for finding the cross-space mapping.
 %% INPUT:
 %% The module relies on the following axioms which are produced by the language-independent part of the amalgamation module:
 %% 1. Execution of an operation
@@ -26,10 +26,10 @@
 %%%% Operator declaration %%%%
 
 % Removal operators
-a(rmOp(Op),Spec) 		:- removableOp(Spec,Op).
-a(rmPred(Pred),Spec) 	:- removablePred(Spec,Pred).
-a(rmSort(Sort),Spec) 	:- removableSort(Spec,Sort).
-a(rmAx(Ax),Spec) 		:- removableAx(Spec,Ax).
+a(rmOp(Op),Spec) 		:- isNonDataOp(Spec,Op).
+a(rmPred(Pred),Spec) 	:- isNonDataPred(Spec,Pred).
+a(rmSort(Sort),Spec) 	:- isNonDataSort(Spec,Sort).
+a(rmAx(Ax),Spec) 		:- isNonDataAx(Spec,Ax).
 
 % Renaming operators. Only non-data elements can be renamed.
 a(renameOp(Op1,Op2,Spec2),Spec1) 		:- 	hasOp(Spec1,Op1,0), hasOp(Spec2,Op2,0), Spec1 != Spec2, Op1 != Op2, 
@@ -70,25 +70,25 @@ cost(genSort(Sort,SortP),Spec,C)	:- a(genSort(Sort,SortP),Spec),		sortHasPriorit
 
 %%% Removal Operators
 % Remove Operator
-poss(rmOp(Op),Spec,t) 		:- 	hasOp(Spec,Op,t),	removableOp(Spec,Op), exOtherSpecWithoutOp(Spec,Op,t),
+poss(rmOp(Op),Spec,t) 		:- 	hasOp(Spec,Op,t),	isNonDataOp(Spec,Op), exOtherSpecWithoutOp(Spec,Op,t),
 								not inCrossSpaceMap(Op,t),
 								0{hasAxiom(Spec,Ax,t) : axInvolvesPredOp(Spec,Ax,Op,t)}0.
 								
 exOtherSpecWithoutOp(Spec1,Op,t) :- hasOp(Spec1,Op,t), not hasOp(Spec2,Op,t), spec(Spec2), Spec1 != Spec2. 
 
 % Remove Predicate
-poss(rmPred(Pred),Spec,t) 	:- 	hasPred(Spec,Pred,t), removablePred(Spec,Pred), exOtherSpecWithoutPred(Spec,Pred,t), 
+poss(rmPred(Pred),Spec,t) 	:- 	hasPred(Spec,Pred,t), isNonDataPred(Spec,Pred), exOtherSpecWithoutPred(Spec,Pred,t), 
 								not inCrossSpaceMap(Pred,t),
 								0{hasAxiom(Spec,Ax,t) : axInvolvesPredOp(Spec,Ax,Pred,t)}0.
 																
 exOtherSpecWithoutPred(Spec1,Pred,t) :- hasPred(Spec1,Pred,t), not hasPred(Spec2,Pred,t), spec(Spec2), Spec1 != Spec2. 
 
 % Remove Axiom
-poss(rmAx(Ax),Spec,t) 		:- 	hasAxiom(Spec,Ax,t), removableAx(Spec,Ax), exOtherSpecWithoutEqivAx(Spec,Ax,t).
+poss(rmAx(Ax),Spec,t) 		:- 	hasAxiom(Spec,Ax,t), isNonDataAx(Spec,Ax), exOtherSpecWithoutEqivAx(Spec,Ax,t).
 exOtherSpecWithoutEqivAx(Spec1,Ax,t) 	:- 	hasAxiom(Spec1,Ax,t), 0{axEquivalent(Spec1,Ax,Spec2,_,t)}0, 
 											spec(Spec2), Spec1 != Spec2. 
 % Remove Sort 
-poss(rmSort(Sort),Spec,t) 	:- 	hasSort(Spec,Sort,t), removableSort(Spec,Sort), exOtherSpecWithoutSort(Spec,Sort,t),
+poss(rmSort(Sort),Spec,t) 	:- 	hasSort(Spec,Sort,t), isNonDataSort(Spec,Sort), exOtherSpecWithoutSort(Spec,Sort,t),
 								isNotParentSort(Spec,Sort,t),
 								not inCrossSpaceMap(Sort,t),
 								noOpUsesSort(Spec,Sort,t), noPredUsesSort(Spec,Sort,t), noAxUsesSort(Spec,Sort,t).
@@ -107,7 +107,7 @@ poss(renameOp(Op1,Op2,Spec2),Spec1,t) :- 	a(renameOp(Op1,Op2,Spec2),Spec1),
 											not exec(rmOp(Op2),Spec2,t),
 											not opSortsNotEquivalent(Spec1,Op1,Spec2,Op2,t), 
 											not hasOp(Spec1,Op2,t), not hasOp(Spec2,Op1,t),
-											removableOp(Spec1,Op1),
+											isNonDataOp(Spec1,Op1),
 											specProvidesVocabulary(Spec2).
 
 %%% Rename Predicate
@@ -116,7 +116,7 @@ poss(renamePred(Pred1,Pred2,Spec2),Spec1,t) :- 	a(renamePred(Pred1,Pred2,Spec2),
 												not exec(rmPred(Pred2),Spec2,t),
 												not predSortsNotEquivalent(Spec1,Pred1,Spec2,Pred2,t), 
 												not hasPred(Spec1,Pred2,t), not hasPred(Spec2,Pred1,t),
-												removablePred(Spec1,Pred1),
+												isNonDataPred(Spec1,Pred1),
 												specProvidesVocabulary(Spec2).
 
 %%% Rename Sort
@@ -124,11 +124,11 @@ poss(renameSort(Sort1,Sort2,Spec2),Spec1,t) :- 	a(renameSort(Sort1,Sort2,Spec2),
 												hasSort(Spec1,Sort1,t), hasSort(Spec2,Sort2,t), 
 												not exec(rmSort(Sort2),Spec2,t),
 												not hasSort(Spec1,Sort2,t), not hasSort(Spec2,Sort1,t),
-												removableSort(Spec1,Sort1),
+												isNonDataSort(Spec1,Sort1),
 												specProvidesVocabulary(Spec2).
 %%% Generalise sort (Currently buggy. There is a problem that if two sorts in one spec get generalised to the same parent sort, the mappings are ambiguous when coming from the Generic Space upwards. E.g. Thing -> House and at the same time Thing -> Resident.)
 %% poss(genSort(Sort,SortP),Spec,t) :- 	a(genSort(Sort,SortP),Spec), 
-%% 										removableSort(Spec,Sort),
+%% 										isNonDataSort(Spec,Sort),
 %% 										not inCrossSpaceMap(Sort,t),
 %% 										hasSort(Spec,Sort,t), hasParentSort(Spec,Sort,SortP,t).
 										
@@ -157,27 +157,26 @@ notEqual(Spec1,Spec2,t) :- sortNotEquivalent(Spec1,Spec2,_,t).
 notEqual(Spec1,Spec2,t) :- axNotEquivalent(Spec1,Spec2,_,t).
 
 
-sortNotEquivalent(Spec1,Spec2,Sort,t) 	:- hasSort(Spec1,Sort,t), 	spec(Spec2), not sortEquivalent(Spec1,Spec2,Sort,t), Spec1 != Spec2.
-sortNotEquivalent(Spec1,Spec2,Sort,t) 	:- hasSort(Spec1,Sort,t), 	spec(Spec2), not hasSort(Spec2,Sort,t), Spec1 != Spec2.
-opNotEquivalent(Spec1,Spec2,Op,t) 		:- hasOp(Spec1,Op,t), 		spec(Spec2), not opEquivalent(Spec1,Spec2,Op,t), Spec1 != Spec2.
-opNotEquivalent(Spec1,Spec2,Op,t) 		:- hasOp(Spec1,Op,t), 		spec(Spec2), not hasOp(Spec2,Op,t), Spec1 != Spec2.
-predNotEquivalent(Spec1,Spec2,Pred,t) 	:- hasPred(Spec1,Pred,t), 	spec(Spec2), not predEquivalent(Spec1,Spec2,Pred,t), Spec1 != Spec2.
-predNotEquivalent(Spec1,Spec2,Pred,t) 	:- hasPred(Spec1,Pred,t), 	spec(Spec2), not hasPred(Spec2,Pred,t), Spec1 != Spec2.
-axNotEquivalent(Spec1,Spec2,Ax1,t)		:- hasAxiom(Spec1,Ax1,t), 	spec(Spec2), 0{axEquivalent(Spec1,Ax1,Spec2,Ax2,t)}0, Spec1 != Spec2.
+sortNotEquivalent(Spec1,Spec2,Sort,t) 	:- hasSort(Spec1,Sort,t), 	spec(Spec2), not sortEquivalent(Spec1,Spec2,Sort,t), Spec1 != Spec2,
+										   isNonDataSort(Spec1,Sort).
+sortNotEquivalent(Spec1,Spec2,Sort,t) 	:- hasSort(Spec1,Sort,t), 	spec(Spec2), not hasSort(Spec2,Sort,t), Spec1 != Spec2,
+										   isNonDataSort(Spec1,Sort).
+opNotEquivalent(Spec1,Spec2,Op,t) 		:- hasOp(Spec1,Op,t), 		spec(Spec2), not opEquivalent(Spec1,Spec2,Op,t), Spec1 != Spec2, 
+										   isNonDataOp(Spec1,Op).
+opNotEquivalent(Spec1,Spec2,Op,t) 		:- hasOp(Spec1,Op,t), 		spec(Spec2), not hasOp(Spec2,Op,t), Spec1 != Spec2,
+										   isNonDataOp(Spec1,Op).
+predNotEquivalent(Spec1,Spec2,Pred,t) 	:- hasPred(Spec1,Pred,t), 	spec(Spec2), not predEquivalent(Spec1,Spec2,Pred,t), Spec1 != Spec2,
+										   isNonDataPred(Spec1,Pred).
+predNotEquivalent(Spec1,Spec2,Pred,t) 	:- hasPred(Spec1,Pred,t), 	spec(Spec2), not hasPred(Spec2,Pred,t), Spec1 != Spec2,
+										   isNonDataPred(Spec1,Pred).
+axNotEquivalent(Spec1,Spec2,Ax1,t)		:- hasAxiom(Spec1,Ax1,t), 	spec(Spec2), 0{axEquivalent(Spec1,Ax1,Spec2,Ax2,t)}0, Spec1 != Spec2,
+										   isNonDataAx(Spec1,Ax1).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Internal Language Specific Part %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Constraints on action execution.
 % If something is renamed, then, from perspective of the other specification it is renamed to this specification.
-
-%%% Determine removability of elements. This is static and hence belongs to the base part of the LP.
-#program base.
-% Only non-data elements with a priority != -1 can be removed. (Setting priority to -1 is a workaround to manually define non-removable elements in a spec.)
-removableOp(Spec,Op) 		:- isNonDataOp(Spec,Op), not opHasPriority(Spec,Op,-1).
-removablePred(Spec,Pred) 	:- predHasPriority(Spec,Pred,P), P != -1.
-removableSort(Spec,Sort) 	:- isNonDataSort(Spec,Sort), not sortHasPriority(Spec,Sort,-1).
-removableAx(Spec,Ax) 		:- isNonDataAx(Spec,Ax), not axHasPriority(Spec,Ax,-1).
 
 %%%% Inertia rules for sorts, operators, predicates and axioms. This is dynamic and we need to iterate over t, hence we have a cumulative part again.
 #program cumulative(t).
@@ -258,6 +257,7 @@ sortEquivalent(Spec1,Spec2,Sort,t) 	:- 	Spec1 != Spec2, hasSort(Spec1,Sort,t), h
 																		
 %  An operator is equivalent in two different specs if its sorts are equivalent. 
 opEquivalent(Spec1,Spec2,Op,t) 				:- 	Spec1 != Spec2, hasOp(Spec1,Op,t), hasOp(Spec2,Op,t), 
+												%% isNonDataOp(Spec1,Op), isNonDataOp(Spec2,Op),
 												not opSortsNotEquivalent(Spec1,Spec2,Op,t). 
 opEquivalent(Spec1,Spec2,Op,t)				:- 	opEquivalent(Spec2,Spec1,Op,t).
 

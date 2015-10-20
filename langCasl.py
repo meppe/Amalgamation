@@ -108,6 +108,7 @@ class CaslPred:
         self.name = name
         self.args = []
         self.priority = 1
+        self.isDataPred = False
     
     @staticmethod
     def byStr(text):
@@ -121,6 +122,8 @@ class CaslPred:
         for s in self.args: outStr = outStr + s +" * " 
         outStr = outStr[:-3]
         outStr = outStr + "\t%% prio:"+ str(self.priority)
+        if self.isDataPred:
+            outStr +=  "\t(data predicate)"
         return outStr    
 
     def toLPStr(self, specName) :
@@ -134,6 +137,10 @@ class CaslPred:
         oStr = oStr + "hasNumArgs("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+","+str(argCtr)+").\n"      
         # if self. == True:
             # oStr = oStr + "removablePred("+toLPName(specName,"spec")+","+toLPName(self.name)+").\n"
+        if self.isDataPred == False:
+            oStr = oStr + "isNonDataPred("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+").\n"
+        else:
+            oStr = oStr + "isDataPred("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+").\n"            
         oStr = oStr + "predHasPriority("+toLPName(specName,"spec")+","+toLPName(self.name,"po")+","+str(self.priority)+").\n"        
         return oStr 
              
@@ -484,6 +491,7 @@ def parseXml(xmlFile):
     axCtr = 0 
     dataOps = {}
     dataSorts = {}
+    dataPreds = {}
     opAndSortPriorities = {}
     for dgNode in dGraph:
 
@@ -496,9 +504,10 @@ def parseXml(xmlFile):
         
 
         # First scan axioms to get the following meta-information:
-        # (i) data ops, and sorts. Data ops and sorts are those in generated type definitions, so we have to scan for axioms starting with the string "generated type".
-        # (ii) Priority information of ops, predicates and sorts. Priorities are encoded in the name of dummy-axioms that have the string ". prioDummyOp = prioDummyOp".
+        # (i) data ops, preds and sorts. Data ops and sorts are those in generated type definitions, so we have to scan for axioms starting with the string "generated type". 
+        # (ii) Priority information of ops, predicates and sorts. Priorities are encoded in the name of dummy-axioms that have the string ". prioDummyOp = prioDummyOp".Priodity "data" means we have a data element.
         dataOps[specName] = []
+        dataPreds[specName] = []
         dataSorts[specName] = []
         opAndSortPriorities[specName]= {}
         for decAx in dgNode:            
@@ -521,8 +530,13 @@ def parseXml(xmlFile):
                                     if len(prioInfoItem.split(":p:")) != 2:
                                         print "WARNING!!! priority information " + prioInfoItem + " in wrong format. Expecting <ElementName>:p:<priorityNumber>. Assigning priority 0 instead."
                                     # prioInfoItem is a strings of the form <ElementName>_<PriorityNumber>
-                                    thisPrioNumber = int(prioInfoItem.split(":p:")[1])
                                     thisPrioElementName = prioInfoItem.split(":p:")[0]
+                                    priority = prioInfoItem.split(":p:")[1]
+                                    if priority == "data":
+                                        thisPrioNumber = "data"
+                                    else: 
+                                        thisPrioNumber = int(priority)
+                                    
                                     opAndSortPriorities[specName][thisPrioElementName] = thisPrioNumber
 
 
@@ -540,6 +554,8 @@ def parseXml(xmlFile):
 
                         if sName in opAndSortPriorities[specName].keys():
                             sort.priority = opAndSortPriorities[specName][sName]
+                            if sort.priority == "data":
+                                dataSorts[specName].append(sName)
                         else:
                             sort.priority = 1
                         
@@ -569,6 +585,8 @@ def parseXml(xmlFile):
                         # print op.name 
                         if op.name in opAndSortPriorities[specName].keys():
                             op.priority = opAndSortPriorities[specName][op.name]
+                            if op.priority == "data":
+                                dataOps[specName].append(op.name)
                         else:
                             op.priority = 1
 
@@ -589,8 +607,18 @@ def parseXml(xmlFile):
                         pred = CaslPred.byStr(entry.text)
                         if pred.name in opAndSortPriorities[specName].keys():
                             pred.priority = opAndSortPriorities[specName][pred.name]
+                            if pred.priority == "data":
+                                dataPreds[specName].append(pred.name)
                         else:
                             pred.priority = 1
+
+                        if pred.name in dataPreds[specName]:
+                            pred.isDataPred = True
+                            pred.priority = 0
+                        else:
+                            pred.isDataPred = False
+                            # print op.name + " is not removable"
+
                         thisSpec.preds.append(pred)   
         # Add axioms
         for decAx in dgNode:
@@ -611,7 +639,11 @@ def parseXml(xmlFile):
                             # Check priority:
                             priority = 1
                             if name.find(":p:") != -1 and name.find("--") == -1:
-                                priority = int(name.split(":p:")[1].split(":")[0])                        
+                                priority = name.split(":p:")[1].split(":")[0]
+                                if priority == "data":
+                                    ax.isDataAxiom = True
+                                else:
+                                    priority = int(priority)
                             if 'priority' in entry.attrib.keys():
                                 priority = int(entry.attrib['priority'])
                             ax.priority = priority

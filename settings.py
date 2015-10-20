@@ -6,18 +6,21 @@ inputFile = "examples/minimal.casl"
 inputSpaceNames = ["S1","S2"]
 
 ###### The number of models to be generated (0 for all models)
-numModels = 10
+numModels = 1
 
 ###### The maximal number of iterations for generalization
-maxIterationsGeneralize = 20
+maxIterationsGeneralize = 30
 
 ###### Percentage of blend value below the currently highest value found so far that we want to keep in the results. 0 means that we only keep the blends with the highest value found so far, 100 means to consider all blends.
-blendValuePercentageBelowHighestValueToKeep = 40
+blendValuePercentageBelowHighestValueToKeep = 0
 
 ###### Time limit for eprover and darwin consistency check, and for clingo (ASP solving), in seconds CPU time
 eproverTimeLimit = 4
 darwinTimeLimit = 0 ### 0 means that we don't use darwin at all. 
 clingoTimeLimit = 120
+
+###### Number of cores to be used for ASP solving (currently only 1 core supported)
+numCores = 1
 
 ###### Consistency check: brave or careful
 consistencyCheckBehavior = "brave" ### If we can not prove inconsistency, we assume the blend is consistent
@@ -32,7 +35,7 @@ hetsExe = 'hets'
 genExplicitBlendFiles = False
 
 ###### A switch to determine whether to only generalise or whether to also  (mostly for debugging...)
-generaliseOnly = False
+generaliseOnly = True
 
 ###### Determines the renaming mode. Can be either mergeNames or renameTo. This determines whether renamed elements in a spec are merged, i.e., connecged with a "-" to generate a new name or whether one name is selected as target name. 
 # renamingMode = "renameTo"
@@ -43,16 +46,11 @@ renamingMode = "mergeNames"
 
 ## Here is space to quickly overwrite the above settings for debugging purposes.
 
-# inputFile = "examples/LPNMR/houseBoat.casl"
-# inputSpaceNames = ["Boat","House"]
-
 # inputFile = "examples/maths/naturalsAndLists_fact.casl"
-# This takes around 7 minutes to solve
 # inputFile = "examples/maths/naturalsAndLists_fact_minimal.casl"
 # inputSpaceNames = ["Nat","List"]
 
 # inputFile = "examples/LPNMR/naturalsAndLists_fact.casl"
-# This takes around 2 minutes to solve
 # inputFile = "examples/maths/naturalsAndLists_sum_minimal.casl"
 # inputSpaceNames = ["Nat","List"]
 
@@ -74,6 +72,8 @@ renamingMode = "mergeNames"
 # inputFile = "examples/AIJ-paper/HouseBoat_GoguenWebsite.casl"
 # inputFile = "examples/AIJ-paper/HouseBoat_simple.casl"
 # inputFile = "examples/AIJ-paper/HouseBoat_movingProp.casl" # This works very well, results are as expected. 
-inputFile = "examples/AIJ-paper/BoatHouse.casl"
-inputSpaceNames = ["House","Boat"]
+# inputFile = "examples/AIJ-paper/BoatHouse.casl" # This works very well, results are as expected. 
+# inputSpaceNames = ["House","Boat"]
 
+inputFile = "examples/AIJ-paper/coltraneChanges.casl" # This works very well, results are as expected. 
+inputSpaceNames = ["List","PerfectCadence"]

@@ -45,9 +45,9 @@ def onModelGeneralize(model):
     modelStr = getModel(model)
     print modelStr
     ## If there is a cross space mapping found, don't stop solving
-    if modelStr.find("finalCrossSpaceMap") > -1:
-        print "Cross space mapping found. Not terminating generalisation."
-        continueSolving = True 
+    # if modelStr.find("finalCrossSpaceMap") > -1:
+        # print "Cross space mapping found. Not terminating generalisation."
+        # continueSolving = True 
 
     # breakpoint = False
     # if modelStr.find("exec(renameOp(po_boat,po_resident,spec_House),spec_Boat") > -1:
@@ -156,8 +156,8 @@ def main(prg):
         ret = prg.solve(None, onModelGeneralize)                  
         end = time.clock()
         elapsed = (end - start)
-        print "time for solving elapsed:" + str(elapsed) + " sec."
-        raw_input()
+        print "Step: " + str(stepGeneralize) + " -- Solving time:" + str(elapsed) + " s."
+        # raw_input()
         if elapsed * 1.01 >= clingoTimeLimit:
             print " Time limit for ASP solving exceeded. Aborting ASP generalisation search."
             break

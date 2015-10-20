@@ -10,7 +10,10 @@ import json
 def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
     global blendValuePercentageBelowMinToKeep, renamingMode, consistencyCheckBehavior
 
-    modelAtomsStr = "\n".join(modelAtoms)
+    atomStrs  = []
+    for atom in modelAtoms: 
+        atomStrs.append(str(atom))
+    modelAtomsStr = "\n".join(atomStrs)
     if highestValue == -sys.maxint:
         minBlendValueToConsider = -sys.maxint
     else:
@@ -355,9 +358,12 @@ def writeBlends(blends):
     blendFNameValues = {}
     for blend in blends:
 
-        modelStr = "-".join(blend[""])
-
-        blendStr = blend["prettyHetsStr"]
+        modelStr = blend["genModel"]
+        commentedModelStr  = " %% Generalisation model of this blend:\n"
+        for line in modelStr.split("\n"):
+            commentedModelStr += "%% "+line + "\n"
+        
+        blendStr = commentedModelStr + blend["prettyHetsStr"]
         fName = blend["blendName"] + "_b_"+str(bNum)+".casl"
         outFile = open(fName,"w")
         outFile.write(blendStr)
