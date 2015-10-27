@@ -10,14 +10,19 @@ end
 spec List = SemSys then
   sort L
   sort El
-     %% op nil : L                 %% terminal element
-     op cons : El*L -> L        %% constructor
-     op app : L * L -> L        %% concatenation of lists
-     %% op rev : L -> L            %% reverse function
-     %% op succ: El -> El          %% Successor function
-     forall x,y: L, h : El
+     %% op nil : L             %% terminal element     
+    %% op cons : El*L -> L        %% constructor
+     %% op app : L * L -> L    %% concatenation of lists
+     %% op rev : L -> L        %% reverse function
+    op nextEle: El -> El       %% Successor function
+    %% op topEle : L -> El
+    %% forall l : L, el : El
+    %%   . topEle(cons(el,l)) = el
+    %% forall l1,l2 : L, h1,h2 : El
+    %%   . l1 = cons(h1,cons(h2,l2)) => nextEle(h2) = h1
+     %% forall x,y: L, h : El       
        %% . app(nil,x) = x                             %(Ax-AppNilIsId:p:2)% 
-       . app(cons(h,x),y) = cons(h,app(x,y))       
+       %% . app(cons(h,x),y) = cons(h,app(x,y))       
        %% . rev(nil) = nil                            
        %% . rev(cons(h,x)) = app(rev(x),cons(h,nil))  
        %% . qrev(cons(h,x),y) = qrev(x,cons(h,y))   
@@ -32,41 +37,42 @@ end
 
 spec Symbols = SemSys 
 then 
-  %% sort Note
+  sort Note
  
- generated type Note ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | x | x1
+ %% free type Note ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | x | x1
  op __+__ : Note * Note -> Note
- op suc : Note -> Note 
- 
- . suc(0) = 1 %(AxSucc0:p:data)%
- . suc(1) = 2 %(AxSucc1:p:data)%
- . suc(2) = 3 %(AxSucc2:p:data)%
- . suc(3) = 4 %(AxSucc3:p:data)%
- . suc(4) = 5 %(AxSucc4:p:data)%
- . suc(5) = 6 %(AxSucc5:p:data)%
- . suc(6) = 7 %(AxSucc6:p:data)%
- . suc(7) = 8 %(AxSucc7:p:data)%
- . suc(8) = 9 %(AxSucc8:p:data)%
- . suc(9) = x %(AxSucc9:p:data)%
- . suc(x) = x1 %(AxSucc10:p:data)%
- . suc(x1) = 0 %(AxSucc11:p:data)%
+ %% op suc : Note -> Note 
+ %% ops 0,1,2,3,4,5,6,7,8,9,x,x1 : Note
+ ops 7 : Note
+ %% . suc(0) = 1 %(AxSucc0:p:data)%
+ %% . suc(1) = 2 %(AxSucc1:p:data)%
+ %% . suc(2) = 3 %(AxSucc2:p:data)%
+ %% . suc(3) = 4 %(AxSucc3:p:data)%
+ %% . suc(4) = 5 %(AxSucc4:p:data)%
+ %% . suc(5) = 6 %(AxSucc5:p:data)%
+ %% . suc(6) = 7 %(AxSucc6:p:data)%
+ %% . suc(7) = 8 %(AxSucc7:p:data)%
+ %% . suc(8) = 9 %(AxSucc8:p:data)%
+ %% . suc(9) = x %(AxSucc9:p:data)%
+ %% . suc(x) = x1 %(AxSucc10:p:data)%
+ %% . suc(x1) = 0 %(AxSucc11:p:data)%
 
-    . not 0 = 1 %(Ax-0neq1:p:data)%
-    . not 0 = 2 %(Ax-0neq2:p:data)%
-    . not 0 = 3 %(Ax-0neq3:p:data)%
-    . not 0 = 4 %(Ax-0neq4:p:data)%
-    . not 0 = 5 %(Ax-0neq5:p:data)%
-    . not 0 = 6 %(Ax-0neq6:p:data)%
-    . not 0 = 7 %(Ax-0neq7:p:data)%
-    . not 0 = 8 %(Ax-0neq8:p:data)%
-    . not 0 = 9 %(Ax-0neq9:p:data)%
-    . not 0 = x %(Ax-0neqX:p:data)%
-    . not 0 = x1 %(Ax-0neqX1:p:data)%
- forall c, d: Note 
-    . suc(c) = 0 <=> c = x1         %(AxSucc0-11:p:data)%
-    . suc(c) = suc(d) <=> c = d     %(AxSuccEql:p:data)%
-    . c + 0 = c                     %(AxSuccDontKnow:p:data)%
-    . c + suc(d) = suc(c+d)         %(AxSuccAdd:p:data)%
+ %%    . not 0 = 1 %(Ax-0neq1:p:data)%
+ %%    . not 0 = 2 %(Ax-0neq2:p:data)%
+ %%    . not 0 = 3 %(Ax-0neq3:p:data)%
+ %%    . not 0 = 4 %(Ax-0neq4:p:data)%
+ %%    . not 0 = 5 %(Ax-0neq5:p:data)%
+ %%    . not 0 = 6 %(Ax-0neq6:p:data)%
+ %%    . not 0 = 7 %(Ax-0neq7:p:data)%
+ %%    . not 0 = 8 %(Ax-0neq8:p:data)%
+ %%    . not 0 = 9 %(Ax-0neq9:p:data)%
+ %%    . not 0 = x %(Ax-0neqX:p:data)%
+ %%    . not 0 = x1 %(Ax-0neqX1:p:data)%
+ %% forall c, d: Note 
+ %%    . suc(c) = 0 <=> c = x1         %(AxSucc0-11:p:data)%
+ %%    . suc(c) = suc(d) <=> c = d     %(AxSuccEql:p:data)%
+ %%    . c + 0 = c                     %(AxSuccDontKnow:p:data)%
+ %%    . c + suc(d) = suc(c+d)         %(AxSuccAdd:p:data)%
 end
 
 spec Chord = Symbols then 
@@ -78,19 +84,19 @@ spec Chord = Symbols then
         root: Chord -> Note                                 %(root_def)%
 
     %% There must be a root note which is played, i.e., an absolute note.
-    %% forall c:Chord . exists n:Note
-    %%   . root(c) = n /\ hasAbsNote(c,n)  %(exOneRootThatMustBePlayed:p:data)% 
+    forall c:Chord . exists n:Note
+      . root(c) = n /\ hasAbsNote(c,n)  %(exOneRootThatMustBePlayed:p:1)% 
     %% forall c:Chord, n:Note
     %%   . root(c) = n => hasAbsNote(c,n)  %(rootMustBePlayed:p:data)% 
 
     %% %% Relate absolute and relative notes
-    %% forall c:Chord,n:Note, r:Note
-    %%   . root(c) = r => (hasRelNote(c,n) <=> hasAbsNote(c,r+n))   %(reltoabs_alt:p:data)%    
-       %% %% . hasRelNote(c,n) <=> hasAbsNote(c,(root(c)+n))         %(reltoabs:p:data)%    
-       %% %% . hasAbsNote(c,n) <=> hasRelNote(c,(root(c)+n))         %(abstorel:p:data)%    
+    forall c:Chord,n:Note, r:Note
+      . root(c) = r => (hasRelNote(c,n) <=> hasAbsNote(c,r+n))   %(reltoabs_alt:p:1)%    
+       %% . hasRelNote(c,n) <=> hasAbsNote(c,(root(c)+n))         %(reltoabs:p:data)%    
+       %% . hasAbsNote(c,n) <=> hasRelNote(c,(root(c)+n))         %(abstorel:p:data)%    
     
     %% Define forbidden dissonances
-    %% forall n:Note, c:Chord
+    %% forall n:Note, c:Chord 
     %% %% One haftone away from the root is often quite dissonant
     %% . not hasRelNote(c,1)                       %(dis_second:p:data)%
     %% %% Two notes that can be interpreted as major and minor 3rd
@@ -99,10 +105,9 @@ spec Chord = Symbols then
     %% . not (hasRelNote(c,7) /\ hasRelNote(c,6))  %(dis_perfectDimFifth:p:data)%    
     %% %% A minor 7th (rel 10) with a major 6th (rel 9) is pretty dissonant
     %% . not (hasRelNote(c,x) /\ hasRelNote(c,9))  %(dis_seventhsixth:p:data)%
-    
 end
 
-%%% The tonica 7th chord
+%%% The dominant 7th chord
 spec V7 = 
   Chord then
   op c:Chord
@@ -111,25 +116,26 @@ spec V7 =
   %% . hasAbsNote(c,x1) %(Ax-absg11:p:3)%  
   %% . hasAbsNote(c,2)  %(Ax-absg2:p:1)%   
   %% . hasAbsNote(c,5)  %(Ax-absg5:p:2)%  
-  . root(c) = 7      %(Ax-rootg7:p:2)%
+  %% . root(c) = 7      %(Ax-rootg7:p:2)%
   %% . hasRelNote(c,0)  %(Ax-relg0:p:3)%   
   %% . hasRelNote(c,4)  %(Ax-relg4:p:3)%   
   %% . hasRelNote(c,7)  %(Ax-relg7:p:2)%   
   %% . hasRelNote(c,x)  %(Ax-relg10:p:3)% 
 end
 
-%%% The root major Chord
+%%% The tonic major Chord
 spec I = 
   Chord then
   op c:Chord
   %% . hasAbsNote(c,0)  %(Ax-absc0:p:3)% %priority(3)% 
   %% . hasAbsNote(c,4)  %(Ax-absc4:p:2)% %priority(2)%
   %% . hasAbsNote(c,7)  %(Ax-absc7:p:1)% %priority(1)%  
-  . root(c) = 0      %(Ax-rootc0:p:1)% %priority(1)%
+  %% . root(c) = 0      %(Ax-rootc0:p:1)% %priority(1)%
   %% . hasRelNote(c,0)  %(Ax-relc0:p:3)% %priority(3)%  
   %% . hasRelNote(c,4)  %(Ax-relc4:p:3)% %priority(3)%
   %% . hasRelNote(c,7)  %(Ax-relc7:p:3)% %priority(3)%  
 end
+
 
 spec Progression = Chord then 
     sorts Progression
@@ -137,7 +143,8 @@ spec Progression = Chord then
     %%     isTerminalChord : Chord
     %%     isInitialChord : Chord
     ops
-        hasSucc : Chord -> Chord
+        p : Progression
+        hasSucc : Chord -> Chord %% This is partial to allow finite progressions
         key : Progression -> Note
 
     %% . exists! c : Chord . isTerminalChord(c) %% There must be one terminal chord
@@ -149,8 +156,12 @@ end
 spec PerfectCadence = Progression then 
     V7 with c |-> c1Perfect then
     I with c |-> c2Perfect then 
-    
-    . hasSucc(c1Perfect) = c2Perfect  %(Ax-succPerfect:p:1)%
-    . prioDummyOp = prioDummyOp %(c1Perfect:p:1--c2Perfect:p:1--__+__:p:data--suc:p:data--testPred:p:data)%
+    %% sort PerfectCadence 
+    %% op perfectCadence : Progression
+    %% forall n : Note 
+    %% . key(perfectCadence) = n => root(c1Perfect) = n  %(Ax-rootPerfectC1:p:3)%
+    %% . key(perfectCadence) = n => root(c2Perfect) = n + 7 %(Ax-rootPerfectC2:p:3)%
+    %% . hasSucc(c1Perfect) = c2Perfect  %(Ax-succPerfect:p:3)%
+    . prioDummyOp = prioDummyOp %(c1Perfect:p:1--c2Perfect:p:1--__+__:p:data--suc:p:data--testPred:p:data--Note:p:data)%
 %% end
 

@@ -302,8 +302,6 @@ class CaslSpec:
         for ax in self.axioms:
             if ax.axStr == ". prioDummyOp = prioDummyOp":
                 continue
-            if ax.isDataAxiom == True:
-                continue
             if ax.priority == -1:
                 continue
             oStr = oStr + ax.toLPStr(self.name) + "\n"        
@@ -438,19 +436,18 @@ class CaslAx:
         pattern = "\s:\s\w+"
 
         # Identify sorts in axiom
-
+        sortNames = {}
         while True:
             match = re.search(pattern,tmpAxStr)
             if match == None:
                 break
             # print match.group(0)
             tmpAxStr = re.sub(pattern,"",tmpAxStr,count=1)
-            self.involvedSorts[match.group(0)[3:]] = True
+            sortNames[match.group(0)[3:]] = True    
+        self.involvedSorts = copy.deepcopy(sortNames.keys())
 
-        # print self.involvedSorts.keys()
 
         # Identify variables in axiom (needed to distinguish from operators and predicates)
-
         tmpAxStr = copy.deepcopy(axStr)
         pattern = "(forall|exists|exists!).*?[\.]"
         vars = set()        
@@ -461,11 +458,11 @@ class CaslAx:
             # print "varMatch"
             # print match.group(0)
             varArr = re.split("[\s.=(),:><;\n\\\\/]|not|forall|exists|exists!|",match.group(0))
-            varArr = list(set(varArr) - set(self.involvedSorts.keys()))
+            varArr = list(set(varArr) - set(self.involvedSorts))
             vars = vars | set(varArr)
             tmpAxStr = re.sub(pattern,"",tmpAxStr,count=1)
 
-        # Identify operatos and predictes in axiom.
+        # Identify operators and predicates in axiom.
         axStrArr = re.split("[ .=(),:><;\n\\\\/]|not|forall|exists|exists!|",tmpAxStr)
         predOpNames = {}
         for item in axStrArr:
@@ -1011,3 +1008,36 @@ def isEquivalent(axStr1,axStr2):
 
 def renameEleInAxiom(axStr, eleFrom,eleTo):
     return re.sub("(?<!\w)"+eleFrom+"(?!\w)",eleTo,axStr)
+
+def verifyInputSpaces(inputSpaces):
+    print "Verifying input spaces... "
+    for spec in inputSpaces:
+        # Check if data axioms contain non-data elements
+        for ax in spec.axioms:
+            if ax.isDataAxiom == False:
+                continue
+            elements = ax.involvedPredsOps + ax.involvedSorts
+            for ele in elements:
+                if ele == "prioDummyOp":
+                    continue
+                print 'ax involves ele ' + ele
+                for sort in spec.sorts:
+                    if ele == sort.name and sort.isDataSort == False:
+                        print "WARNING!!! Data sort <" + sort.name + "> is part of the following non-data axiom: "
+                        print ax.axStr
+                        print "This can lead to unsolvable generalisations. Press any key to continue... or CTRL-C to abort. "
+                        raw_input()
+                for op in spec.ops:
+                    if ele == op.name and op.isDataOp == False:
+                        print "WARNING!!! Data operator <" + op.name + "> is part of the following non-data axiom: "
+                        print ax.axStr
+                        print "This can lead to unsolvable generalisations. Press any key to continue... or CTRL-C to abort. "
+                        raw_input()
+                for pred in spec.preds:
+                    if ele == pred.name and pred.isDataPred == False:
+                        print "WARNING!!! Data predicate <" + pred.name + "> is part of the following non-data axiom: "
+                        print ax.axStr
+                        print "This can lead to unsolvable generalisations. Press any key to continue... or CTRL-C to abort. "
+                        raw_input()
+
+

@@ -94,9 +94,9 @@ def onModelGeneralize(model):
     #     raw_input()
 
     ## If no new blends were generated, stop solving
-    if blends != oldBlends:
+    if blends == oldBlends:
         print "New blends were generated. Not terminating generalisation."
-        continueSolving = True
+        continueSolving = False
         # raw_input()
 
 
@@ -137,9 +137,13 @@ def main(prg):
     parts.append(("base", []))
 
     ## The main loop to find the generic space starts here!
+    allStart = time.clock()
     while True:
+        thisStart = time.clock()
         # Abort after the max. number of iterations 
-        if stepGeneralize > imax: break
+        if stepGeneralize > imax: 
+            print "Max. number of iterations hit. Aborting generalisation..."
+            break
         # Append the cumulative part for the particular step (slice) of the program.
         parts.append(("cumulative", [stepGeneralize]))
         # # Ground the new slice
@@ -150,22 +154,22 @@ def main(prg):
         # Add the atom query(t) of this slice to the program. 
         prg.assign_external(Fun("query", [stepGeneralize]), True)
         # Determine whether or not to continue solving. The global var is set in onModelGeneralise
-        continueSolving = False
+        continueSolving = True
         # Find Stable Models for this generalization iteration
-        start = time.clock()
+        # start = time.clock()
         ret = prg.solve(None, onModelGeneralize)                  
         end = time.clock()
-        elapsed = (end - start)
-        print "Step: " + str(stepGeneralize) + " -- Solving time:" + str(elapsed) + " s."
-        # raw_input()
-        if elapsed * 1.01 >= clingoTimeLimit:
-            print " Time limit for ASP solving exceeded. Aborting ASP generalisation search."
-            break
+        allElapsed = (end - allStart)        
+        thisElapsed = (end - thisStart)        
+        print "Iteration # " + str(stepGeneralize) + " \t -- \t" + "This iteration: " + str(thisElapsed) + "s \t -- \t Total time: " + str(allElapsed) + "s"
+        if ret == SolveResult.UNKNOWN:                         
+            print "UNKNOWN ASP solving result, probably because time limit for ASP solving exceeded. Aborting ASP generalisation search."            
+            continueSolving = False
 
         # If Stable Models are found and we are stop solving, break loop.
-        if ret == SolveResult.SAT:
-            if continueSolving == False:
-                break
+        # 
+        if continueSolving == False:
+            break
 
         stepGeneralize = stepGeneralize+1
 

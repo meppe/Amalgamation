@@ -17,9 +17,9 @@ blendValuePercentageBelowHighestValueToKeep = 0
 ###### Time limit for eprover and darwin consistency check, and for clingo (ASP solving), in seconds CPU time
 eproverTimeLimit = 4
 darwinTimeLimit = 0 ### 0 means that we don't use darwin at all. 
-clingoTimeLimit = 120
+clingoTimeLimit = 45
 
-###### Number of cores to be used for ASP solving (currently only 1 core supported)
+###### Number of cores to be used for ASP solving (currently only one supported)
 numCores = 1
 
 ###### Consistency check: brave or careful
@@ -35,7 +35,7 @@ hetsExe = 'hets'
 genExplicitBlendFiles = False
 
 ###### A switch to determine whether to only generalise or whether to also  (mostly for debugging...)
-generaliseOnly = True
+generaliseOnly = False
 
 ###### Determines the renaming mode. Can be either mergeNames or renameTo. This determines whether renamed elements in a spec are merged, i.e., connecged with a "-" to generate a new name or whether one name is selected as target name. 
 # renamingMode = "renameTo"
@@ -75,5 +75,5 @@ renamingMode = "mergeNames"
 # inputFile = "examples/AIJ-paper/BoatHouse.casl" # This works very well, results are as expected. 
 # inputSpaceNames = ["House","Boat"]
 
-inputFile = "examples/AIJ-paper/coltraneChanges.casl" # This works very well, results are as expected. 
+inputFile = "examples/AIJ-paper/coltraneChanges.casl" 
 inputSpaceNames = ["List","PerfectCadence"]

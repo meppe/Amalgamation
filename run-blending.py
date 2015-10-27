@@ -9,10 +9,15 @@ fName = inputFile
 # Generate an xml file from a CASL input file. 
 inputSpacesXmlFileName = input2Xml(fName,inputSpaceNames) 
 inputSpaces = parseXml(inputSpacesXmlFileName)
+
+verifyInputSpaces(inputSpaces)
+
 print "blending the following CASL specs:"
 for s in inputSpaces:
     print s.toCaslStr()
 print "\n\n\n"
+
+
 # raw_input()
 # Generate the Logic Programming representation of the CASL input spaces. 
 lpRep = toLP(inputSpaces)
