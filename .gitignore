@@ -17,3 +17,4 @@ examples/AIJ-Paper/HouseBoat_movingProp.lp
 examples/AIJ-Paper/HouseBoat_simple.lp
 BoatHouse.lp
 coltraneChanges.lp
+*.tptp
