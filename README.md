@@ -7,6 +7,7 @@ COINVENT Amalgamation Module
 - Ewen MacLean (ewenmaclean@gmail.com)
 
 
+
 ### Overview
 This is the amalgamation system which is the core of the blending process. The current state (22.04.15) should run on Ubuntu linux machines with some music examples and the example of blending the theory of naturals with the theory of lists to obtain some novel lemma for the theory of lists. 
 It currently works with CASL only, and relies on HETS (via commandline-call) to compute colimits. In future versions it will rely also on language modules to have language-independence, and HDTP to improve generalization search. 
