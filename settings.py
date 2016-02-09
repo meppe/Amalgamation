@@ -6,7 +6,7 @@ inputFile = "examples/minimal.casl"
 inputSpaceNames = ["S1","S2"]
 
 ###### The number of models to be generated (0 for all models)
-numModels = 1
+numModels = 20
 
 ###### The maximal number of iterations for generalization
 maxIterationsGeneralize = 160
@@ -17,7 +17,7 @@ blendValuePercentageBelowHighestValueToKeep = 0
 ###### Time limit for eprover and darwin consistency check, and for clingo (ASP solving), in seconds CPU time
 eproverTimeLimit = 4
 darwinTimeLimit = 0 ### 0 means that we don't use darwin at all. 
-clingoTimeLimit = 345
+clingoTimeLimit = 600345
 
 ###### Number of cores to be used for ASP solving (currently only one supported)
 numCores = 1
@@ -80,7 +80,7 @@ renamingMode = "mergeNames"
 
 inputFile = "examples/AIJ-paper/Chord_CycGroup.casl" 
 # inputSpaceNames = ["Chord","CyclicGroup"]
-inputSpaceNames = ["Chord","CycEls"]
-# inputSpaceNames = ["GeneratorChord","CycEls"]
+# inputSpaceNames = ["Chord","CycEls"]
+inputSpaceNames = ["GeneratorChord","CycEls"]
 
 
