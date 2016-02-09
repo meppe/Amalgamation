@@ -12,7 +12,7 @@ numModels = 20
 maxIterationsGeneralize = 160
 
 ###### Percentage of blend value below the currently highest value found so far that we want to keep in the results. 0 means that we only keep the blends with the highest value found so far, 100 means to consider all blends.
-blendValuePercentageBelowHighestValueToKeep = 0
+blendValuePercentageBelowHighestValueToKeep = 20
 
 ###### Time limit for eprover and darwin consistency check, and for clingo (ASP solving), in seconds CPU time
 eproverTimeLimit = 4
@@ -20,7 +20,7 @@ darwinTimeLimit = 0 ### 0 means that we don't use darwin at all.
 clingoTimeLimit = 600345
 
 ###### Number of cores to be used for ASP solving (currently only one supported)
-numCores = 1
+numCores = 4
 
 ###### Consistency check: brave or careful
 consistencyCheckBehavior = "brave" ### If we can not prove inconsistency, we assume the blend is consistent
@@ -78,7 +78,7 @@ renamingMode = "mergeNames"
 # inputFile = "examples/AIJ-paper/coltraneChanges.casl" 
 # inputSpaceNames = ["List","PerfectCadence"]
 
-inputFile = "examples/AIJ-paper/Chord_CycGroup.casl" 
+inputFile = "examples/AIJ-Paper/Chord_CycGroup.casl"
 # inputSpaceNames = ["Chord","CyclicGroup"]
 # inputSpaceNames = ["Chord","CycEls"]
 inputSpaceNames = ["GeneratorChord","CycEls"]
