@@ -1,0 +1,164 @@
+%% COINVENT cross-domain blending example
+%% =================================
+%% ### Authors:
+%% - Manfred Eppe (meppe@iiia.csic.es)
+%% - Ewen MacLean (ewenmaclean@gmail.com)
+%% - Roberto Confalonieri (confalonieri@iiia.csic.es)
+%% This is a blending example where we blend the Perfect cadence with the mathematical theory of lists to obtain the a sequence of cadences that represent the well-known Coltrane changes in jazz.
+
+spec SemSys = 
+  sort PriorityDummySort
+  op prioDummyOp : PriorityDummySort
+end
+
+
+spec Symbols = SemSys 
+then 
+  sort Note
+ 
+ %% free type Note ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | x | x1
+ op __+__ : Note * Note -> Note
+ %% op suc : Note -> Note 
+ %% ops 0,1,2,3,4,5,6,7,8,9,x,x1 : Note
+ ops 0,7 : Note
+ %% . suc(0) = 1 %(AxSucc0:p:data)%
+ %% . suc(1) = 2 %(AxSucc1:p:data)%
+ %% . suc(2) = 3 %(AxSucc2:p:data)%
+ %% . suc(3) = 4 %(AxSucc3:p:data)%
+ %% . suc(4) = 5 %(AxSucc4:p:data)%
+ %% . suc(5) = 6 %(AxSucc5:p:data)%
+ %% . suc(6) = 7 %(AxSucc6:p:data)%
+ %% . suc(7) = 8 %(AxSucc7:p:data)%
+ %% . suc(8) = 9 %(AxSucc8:p:data)%
+ %% . suc(9) = x %(AxSucc9:p:data)%
+ %% . suc(x) = x1 %(AxSucc10:p:data)%
+ %% . suc(x1) = 0 %(AxSucc11:p:data)%
+
+ %%    . not 0 = 1 %(Ax-0neq1:p:data)%
+ %%    . not 0 = 2 %(Ax-0neq2:p:data)%
+ %%    . not 0 = 3 %(Ax-0neq3:p:data)%
+ %%    . not 0 = 4 %(Ax-0neq4:p:data)%
+ %%    . not 0 = 5 %(Ax-0neq5:p:data)%
+ %%    . not 0 = 6 %(Ax-0neq6:p:data)%
+    . not 0 = 7 %(Ax-0neq7:p:data)%
+ %%    . not 0 = 8 %(Ax-0neq8:p:data)%
+ %%    . not 0 = 9 %(Ax-0neq9:p:data)%
+ %%    . not 0 = x %(Ax-0neqX:p:data)%
+ %%    . not 0 = x1 %(Ax-0neqX1:p:data)%
+ %% forall c, d: Note 
+ %%    . suc(c) = 0 <=> c = x1         %(AxSucc0-11:p:data)%
+ %%    . suc(c) = suc(d) <=> c = d     %(AxSuccEql:p:data)%
+ %%    . c + 0 = c                     %(AxSuccDontKnow:p:data)%
+ %%    . c + suc(d) = suc(c+d)         %(AxSuccAdd:p:data)%
+end
+
+%%% 
+spec List = SemSys then
+  sort L
+  sort El
+     %% op nil : L             %% terminal element     
+    %% op cons : El*L -> L        %% constructor
+     %% op app : L * L -> L    %% concatenation of lists
+     %% op rev : L -> L        %% reverse function
+    op nextEle: El -> El       %% Successor function
+    %% op topEle : L -> El
+    %% forall l : L, el : El
+    %%   . topEle(cons(el,l)) = el
+    %% forall l1,l2 : L, h1,h2 : El
+    %%   . l1 = cons(h1,cons(h2,l2)) => nextEle(h2) = h1
+     %% forall x,y: L, h : El       
+       %% . app(nil,x) = x                             %(Ax-AppNilIsId:p:2)% 
+       %% . app(cons(h,x),y) = cons(h,app(x,y))       
+       %% . rev(nil) = nil                            
+       %% . rev(cons(h,x)) = app(rev(x),cons(h,nil))  
+       %% . qrev(cons(h,x),y) = qrev(x,cons(h,y))   
+       %% . not (cons(h,x) = nil)                      %(Ax_consNotNil:p:3)%
+       %% . app(rev(x),y) = qrev(x,y) %(Ax-heurekaLemmaLists:p:20)% %% This is the eureka lemma that we want to have for lists.
+       %% . rev(x) = qrev(x,nil)      %(Ax-targetTheoremLists:p:20)% %% This is the target theorem of that we know it's correct for naturals, and that we want to "translate" to the theory of lists.
+
+       %% This is our dummy lemma to set priorities of operators, predicats and sorts
+     . prioDummyOp = prioDummyOp %(El:p:1--L:p:1--nil:p:1--cons:p:1--app:p:1--rev:p:1--nextEle:p:2)%
+end
+
+spec Chord = Symbols then 
+    sort Chord
+    preds 
+        hasAbsNote : Chord * Note
+        hasRelNote : Chord * Note
+     ops
+        root: Chord -> Note                                 %(root_def)%
+
+    %% There must be a root note which is played, i.e., an absolute note.
+    forall c:Chord . exists n:Note
+      . root(c) = n /\ hasAbsNote(c,n)  %(exOneRootThatMustBePlayed:p:-1)% 
+    forall c:Chord, n:Note
+      . root(c) = n => hasAbsNote(c,n)  %(rootMustBePlayed:p:-1)% 
+
+    %% Relate absolute and relative notes
+    forall c:Chord,n:Note, r:Note
+      . root(c) = r => (hasRelNote(c,n) <=> hasAbsNote(c,r+n))   %(reltoabs_alt:p:-1)%    
+       %% . hasRelNote(c,n) <=> hasAbsNote(c,(root(c)+n))         %(reltoabs:p:-1)%    
+       %% . hasAbsNote(c,n) <=> hasRelNote(c,(root(c)+n))         %(abstorel:p:-1)%    
+    
+    %% Define forbidden dissonances
+    forall n:Note, c:Chord
+    %% One haftone away from the root is often quite dissonant
+    . not hasRelNote(c,1)                       %(dis_second:p:-1)%
+    %% Two notes that can be interpreted as major and minor 3rd
+    . not (hasRelNote(c,3) /\ hasRelNote(c,4))  %(dis_minorMajorThird:p:-1)%
+    %% Two notes that can be interpreted as perfect and diminished 5th
+    . not (hasRelNote(c,7) /\ hasRelNote(c,6))  %(dis_perfectDimFifth:p:-1)%    
+    %% A minor 7th (rel 10) with a major 6th (rel 9) is pretty dissonant
+    . not (hasRelNote(c,x) /\ hasRelNote(c,9))  %(dis_seventhsixth:p:-1)%
+    
+end
+
+spec G7 = 
+%% G, B, D, F
+  Chord then
+  op c:Chord
+
+  %% . hasAbsNote(c,7)  %(Ax-absg7:p:1)%   %%remove for tritone
+  %% . hasAbsNote(c,x1) %(Ax-absg11:p:3)%  
+  %% . hasAbsNote(c,2)  %(Ax-absg2:p:1)%   %%remove for tritone
+  %% . hasAbsNote(c,5)  %(Ax-absg5:p:2)%  
+  . root(c) = 7      %(Ax-rootg7:p:2)%  
+  %% . hasRelNote(c,0)  %(Ax-relg0:p:3)%   
+  %% . hasRelNote(c,4)  %(Ax-relg4:p:3)%   
+  %% . hasRelNote(c,7)  %(Ax-relg7:p:2)%   
+  %% . hasRelNote(c,x)  %(Ax-relg10:p:3)% 
+end
+
+spec C = 
+  Chord then
+  op c:Chord
+
+  %% . hasAbsNote(c,0)  %(Ax-absc0:p:3)% %priority(3)%  %%remove 
+  %% . hasAbsNote(c,4)  %(Ax-absc4:p:2)% %priority(2)%  %%remove
+  %% . hasAbsNote(c,7)  %(Ax-absc7:p:1)% %priority(1)%  
+  . root(c) = 0      %(Ax-rootc0:p:1)% %priority(1)%  
+  %% . hasRelNote(c,0)  %(Ax-relc0:p:3)% %priority(3)%  
+  %% . hasRelNote(c,4)  %(Ax-relc4:p:3)% %priority(3)%  
+  %% . hasRelNote(c,7)  %(Ax-relc7:p:3)% %priority(3)%  
+end
+
+spec Progression = Chord then 
+    preds 
+%%         isTerminalChord : Chord
+%%         isInitialChord : Chord
+        hasSucc : Chord * Chord   
+%%     . exists! c : Chord . isTerminalChord(c) %% There must be one terminal chord
+%%     . exists! c : Chord . isInitialChord(c)  %% There must be one initial chord
+%%     . forall cPre : Chord . ( exists! cSucc : Chord . hasSucc(cPre,cSucc))  \/ isTerminalChord(cPre) %% A chord must either be a terminal chord or have exactly one hasSuccessor
+%%     . forall cSucc : Chord . ( exists! cPre : Chord . hasSucc(cPre,cSucc))  \/ isInitialChord(cSucc) %% A chord must either be an initial chord or have exactly one predecessor
+end
+
+spec PerfectCadence = Progression then 
+    G7 with c |-> c1Perfect then
+    C with c |-> c2Perfect then 
+    
+    . hasSucc(c1Perfect,c2Perfect)  %(succPerfect:p:30)%
+    %% . isInitialChord(c1Perfect)     %(initialChordPerfect:p:30)%
+    %% . isTerminalChord(c2Perfect)    %(terminalChordPerfect:p:30)%
+    . prioDummyOp = prioDummyOp %(c1Perfect:p:40--c2Perfect:p:40)%
+end

@@ -125,7 +125,7 @@ def main(prg):
     inputSpaces = parseXml(inputSpacesXmlFileName)
 
     ## Some abbreviations to make the code more compact:
-    imax   = maxIterationsGeneralize
+    imax = maxIterationsGeneralize
     
     ## We start at step 0.
     stepGeneralize = 0
@@ -166,8 +166,9 @@ def main(prg):
             print "UNKNOWN ASP solving result, probably because time limit for ASP solving exceeded. Aborting ASP generalisation search."            
             continueSolving = False
 
-        # If Stable Models are found and we are stop solving, break loop.
-        # 
+        if ret == SolveResult.SAT:
+            continueSolving = False            
+
         if continueSolving == False:
             break
 

@@ -385,8 +385,8 @@ class CaslAx:
         self.isDataAxiom = False # This determines whether only data operators (generated type constants) are part of this axiom. Typically, such axioms denote, e.g., that natural numbers are not equal, that the boolean true is not equal to false, or that the tones of a chord (which are data operators) are not equal. 
         self.priority = 1
         self.eqClass = getEquivalenceClass(axStr)
-        self.involvedPredsOps = {}
-        self.involvedSorts = {}
+        self.involvedPredsOps = []
+        self.involvedSorts = []
         self.fromAxStr(axStr)
 
     def getCaslAnnotationStr(self):
@@ -737,9 +737,11 @@ def getGeneralisedSpaceTuples(atoms, originalInputSpaces):
             eleFrom = lpToCaslStr(act["argVect"][0])
             eleTo = lpToCaslStr(act["argVect"][1])
             if renamingMode == "mergeNames":
-                newEleName = eleFrom + "_" + eleTo
+                newEleName = substitute_infix_ops(eleFrom + "_" + eleTo)
             else: 
                 newEleName = eleTo
+
+            print('renaming from ' + eleFrom + ' and ' + eleTo + ' to ' + newEleName)
 
             # Get axioms in spec that involve the element and rename the operator in them. 
             for ax in cSpec.axioms:
@@ -758,18 +760,17 @@ def getGeneralisedSpaceTuples(atoms, originalInputSpaces):
         if act["actType"] == "renameOp" :            
             # Rename element in spec and add priority to compression value
             for op in cSpec.ops:
-                if op.name == eleFrom:
+                if substitute_infix_ops(op.name) == eleFrom:
                     cSpec.ops.remove(op)
                     newOp = copy.deepcopy(op)
                     newOp.name = newEleName
                     cSpec.ops.append(newOp)
-                    ## Multiply by 100 to allow for more precise blend value computation
                     newCompressionValue += op.priority
                     break
-            
+             
             # Rename also element in target spec and add priority to compression value
             for tmpOpTo in targetSpec.ops:
-                if tmpOpTo.name == eleTo:
+                if substitute_infix_ops(tmpOpTo.name) == eleTo:
                     tmpOpTo.name = newEleName
                     newCompressionValue += tmpOpTo.priority
                     break
@@ -777,7 +778,7 @@ def getGeneralisedSpaceTuples(atoms, originalInputSpaces):
         if act["actType"] == "renamePred" :
             # Rename element in spec and add priority to compression value
             for p in cSpec.preds:
-                if p.name == eleFrom:
+                if substitute_infix_ops(p.name) == eleFrom:
                     cSpec.preds.remove(p)                     
                     newPred = copy.deepcopy(p)
                     newPred.name = newEleName
@@ -788,7 +789,7 @@ def getGeneralisedSpaceTuples(atoms, originalInputSpaces):
             # Rename also element in target spec and add priority to compression value
             specToName = lpToCaslStr(act["argVect"][2])
             for tmpPredTo in generalisationTuple.specs[specToName].preds:
-                if tmpPredTo.name == eleTo:  
+                if substitute_infix_ops(tmpPredTo.name) == eleTo:  
                     tmpPredTo.name = newEleName
                     newCompressionValue += tmpPredTo.priority
                     break

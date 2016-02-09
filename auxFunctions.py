@@ -1,13 +1,28 @@
 import math
 import os, sys, time, subprocess, threading, shlex
+
+def substitute_infix_ops(input):
+    if input.find("__+__") >= 0:
+        return input.replace("__+__", "plus")
+    if input.find("+") >= 0:
+        return input.replace("+", "plus")
+    if input.find("__-__") >= 0:
+        return input.replace("__-__", "minus")
+    if input.find("-") >= 0:
+        return input.replace("-", "minus")
+    if input.find("__*__") >= 0:
+        return input.replace("__*__", "multi")
+    if input.find("*") >= 0:
+        return input.replace("*", "multi")
+    if input.find("__\__") >= 0:
+        return input.replace("__\__", "div")
+    if input.find("\\") >= 0:
+        return input.replace("\\", "div")
+    
+    return input        
+
 def toLPName(caslName,elemType):
-
-    # This is just a dirty quickfix to use (infix) plus and minus operators. 
-    if caslName == "__+__" or caslName == "+":
-       caslName =  "plus"
-    if caslName == "__-__" or caslName == "-":
-        caslName = "minus"
-
+    caslName = substitute_infix_ops(caslName)
     caslName = elemType + "_"+caslName
 
     return caslName

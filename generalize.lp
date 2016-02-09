@@ -51,9 +51,9 @@ notGenericReached(t) :- spec(Spec1), spec(Spec2), notEqual(Spec1,Spec2,t), Spec1
 
 %% Decide where cross space mapping phase is over or not. 
 %% This produces the maximal cross space mapping because no further renaming action is possible. 
-%% findCrossSpaceMapPhaseFinished(t) :- 0{ poss(A,Spec,t) : renameAct(A,Spec)}0.
+findCrossSpaceMapPhaseFinished(t) :- 0{ poss(A,Spec,t) : renameAct(A,Spec)}0.
 %% This produces subsets of the maximal cross space mapping. After each step, the search for the cross domain mapping may or may not have finished.
-0{findCrossSpaceMapPhaseFinished(t)}1 :- not findCrossSpaceMapPhaseFinished(t-1).
+%% 0{findCrossSpaceMapPhaseFinished(t)}1 :- not findCrossSpaceMapPhaseFinished(t-1).
 %% Once the generic space finding phase is finished, it is finished forever.
 findCrossSpaceMapPhaseFinished(t) :- findCrossSpaceMapPhaseFinished(t-1).
 %% Some debug assertion: It should not happen, that the cross space mapping phase was finished and now renaming is possible again. 
@@ -80,6 +80,7 @@ genericReached(t) :- not notGenericReached(t).
 #show genericReached/1.
 
 #external query(t).
+%% :- query(t), not findCrossSpaceMapPhaseFinished(t).
 :- query(t), notGenericReached(t).
 :- query(t), genericReached(t), exec(A,Spec,t).
 :- query(t), notGenericReached(t), not exec(_,_,t).
