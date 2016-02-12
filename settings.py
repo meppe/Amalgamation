@@ -78,9 +78,11 @@ renamingMode = "mergeNames"
 # inputFile = "examples/AIJ-paper/coltraneChanges.casl" 
 # inputSpaceNames = ["List","PerfectCadence"]
 
+# inputFile = "examples/AIJ-paper/Chord_CycGroup.casl" 
+# inputSpaceNames = ["GeneratorChord","CycEls"]
+
 inputFile = "examples/AIJ-paper/Chord_CycGroup.casl" 
-# inputSpaceNames = ["Chord","CyclicGroup"]
-# inputSpaceNames = ["Chord","CycEls"]
-inputSpaceNames = ["GeneratorChord","CycEls"]
+inputSpaceNames = ["Progression","Cyc12"]
+
 
 
