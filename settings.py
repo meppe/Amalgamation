@@ -81,7 +81,7 @@ renamingMode = "mergeNames"
 # inputFile = "examples/AIJ-paper/Chord_CycGroup.casl" 
 # inputSpaceNames = ["GeneratorChord","CycEls"]
 
-inputFile = "examples/AIJ-paper/Chord_CycGroup.casl" 
+inputFile = "examples/AIJ-Paper/Chord_CycGroup.casl" 
 inputSpaceNames = ["Progression","Cyc12"]
 
 
