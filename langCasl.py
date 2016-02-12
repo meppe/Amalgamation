@@ -17,22 +17,19 @@ axEqClasses = {}
 ### input2Xml translates CASL input spaces to an xml file. The xml simplifies the CASL parsing. 
 ### Input:  CASL file name and names of input spaces
 ### Output: The path to an xml file representing the input spaces.     
-def input2Xml(fName,inputSpaces):    
+def input2Xml(fName,inputSpaces):
     global hetsExe
-    # First generate .th files from CASL files. 
+    # First generate .th files from CASL files.
     #To be sure that all .th files have been generated repeat this 5 times. This is necessary because file generation via command line turned out to be buggy,
     allGenerated = False
     tries = 0
     while True:
         print "Generating Casl .th files using HETS from " + fName
-        ##TBD: call HETS axInvolvesPredOp
         subprocess.call([hetsExe, "-o th", fName])
-        print "Done generating casl .th files using HETS"        
-        # raw_input()
+        print "Done generating casl .th files using HETS"
         allGenerated = True
         for spec in inputSpaces:
             specThFName = fName.split(".")[0]+"_"+spec+".th"
-            # print "th fle name" + specThFName
             if os.path.isfile(specThFName):
                 thFileSize = os.stat(specThFName).st_size
             else:
@@ -41,21 +38,21 @@ def input2Xml(fName,inputSpaces):
                 allGenerated = False
                 break
         if allGenerated == True:
-             break        
+             break
         if tries > 5:
             print "ERROR: file " + specThFName + " not yet written in " + str(tries) + " times ! Aborting..."
-            exit(1)                
+            exit(1)
         tries = tries + 1
 
-       
-    # Second read the input spaces to be blended in CASL syntax from .th files and concatenate the strings. 
+
+    # Second read the input spaces to be blended in CASL syntax from .th files and concatenate the strings.
     newFileContent = ""
     for spec in inputSpaces:
         thFileName = fName.split(".")[0]+"_"+spec+".th"
         tmpFile = open(thFileName, "r")
         tmp = tmpFile.read()
         newFileContent = newFileContent + tmp
-    
+
     newFileName = fName.split(".")[0]+"_raw.casl"
     newFile = open(newFileName, "w")
     newFile.write(newFileContent)
@@ -64,9 +61,9 @@ def input2Xml(fName,inputSpaces):
     #Clean up and remove temporary theory files...
     os.system("rm " + fName.split(".")[0]+"*.th")
 
-    # Third, generate xml file from concatenated CASL input spaces. As above, this is buggy, so we make sure that the xml file is generated correctly by trying 5 times. 
+    # Third, generate xml file from concatenated CASL input spaces. As above, this is buggy, so we make sure that the xml file is generated correctly by trying 5 times.
     xmlFileName = newFileName.split(".")[0]+".xml"
-    
+
     tries = 0
     # print "Generating xml file for parsing."
     if os.path.isfile(xmlFileName):
@@ -84,7 +81,7 @@ def input2Xml(fName,inputSpaces):
                 break
             except ET.ParseError:
                 print "xml parse error, trying again..."
-        
+
         if tries > 5:
             print "ERROR: File " + xmlFileName + " not yet written correctly after " + str(tries) + " tries! Aborting... :::::::"
             exit(1)
@@ -94,11 +91,11 @@ def input2Xml(fName,inputSpaces):
         if useHetsAPI == 0:
             subprocess.call([hetsExe, "-o xml", newFileName])
         else:
-            subprocess.call(["wget", hetsUrl+'dg/demo_examples%2ftritone_demo.casl?format=xml&node=G7&node=Bbmin', "-O", xmlFileName]) 
-        #wget http://localhost:8000/demo_examples%2ftritone_demo.casl?format=xml -O test.xml       
+            subprocess.call(["wget", hetsUrl+'dg/demo_examples%2ftritone_demo.casl?format=xml&node=G7&node=Bbmin', "-O", xmlFileName])
+        #wget http://localhost:8000/demo_examples%2ftritone_demo.casl?format=xml -O test.xml
         print "Done calling hets to generate xml"
-    
-      
+
+
     #os.remove(newFileName)
     return xmlFileName
 
