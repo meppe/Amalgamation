@@ -51,6 +51,6 @@ inputFile = "examples/maths/naturalsAndLists_sum_minimal.casl"
 inputSpaceNames = ["Nat","List"]
 
 ## This runs fine
-# inputFile = "examples/music/tritone_demo.casl"
-# inputSpaceNames = ["G7","Bbmin"]
+inputFile = "examples/music/tritone_demo.casl"
+inputSpaceNames = ["G7","Bbmin"]
 

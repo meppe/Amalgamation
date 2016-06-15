@@ -91,7 +91,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
     # print cstr
     # First make sure file does not exists, and then write file. Try writing multiple times (this is necessary due to some strange file writing bug...)
     if os.path.isfile("amalgamTmp.casl"):
-        os.system("rm amalgamTmp.casl")
+        os.system("rm -rf amalgamTmp.casl")
 
     tries = 0
     while not os.path.isfile("amalgamTmp.casl") :        
@@ -177,7 +177,7 @@ def findLeastGeneralizedBlends(modelAtoms, inputSpaces, highestValue, blends):
                     
                 blends.append(blendInfo)
 
-    os.system("rm *.tptp")
+    os.system("rm -rf *.tptp")
     os.remove("amalgamTmp.casl")
     
     return [blends,highestValue]
@@ -302,8 +302,8 @@ def writeJsonOutput(blends,inputSpaceNames):
 # This function takes a list of blend speciications and writes them to disk.
 def generateBlend(blend):
 
-    os.system("rm Blend_*.casl")
-    os.system("rm Blend_*.th")
+    os.system("rm -rf Blend_*.casl")
+    os.system("rm -rf Blend_*.th")
     bNum = 0
     blendFilesList = ''
     
@@ -350,7 +350,7 @@ def generateBlend(blend):
     outFile.close()
 
         # os.system("cp " + thName + " " + thName[:-3]+".casl")
-    os.system("rm *.th")
+    os.system("rm -rf *.th")
     # blendFilesList += thName[:-3]+".casl\n"
     blendFilesList += fName
         
@@ -367,8 +367,8 @@ def generateBlend(blend):
 def writeBlends(blends):
     global genExplicitBlendFiles
     # raw_input
-    os.system("rm Blend_*.casl")
-    os.system("rm Blend_*.th")
+    os.system("rm -rf Blend_*.casl")
+    os.system("rm -rf Blend_*.th")
     bNum = 0
     blendFilesList = ''
     for blend in blends:
@@ -417,7 +417,7 @@ def writeBlends(blends):
 
         if genExplicitBlendFiles == True:
             os.system("cp " + thName + " " + thName[:-3]+".casl")
-            os.system("rm *.th")
+            os.system("rm -rf *.th")
             blendFilesList += thName[:-3]+".casl\n"
         
         # blendFilesList += fName
@@ -527,7 +527,7 @@ def checkConsistencyEprover(blendTptpName) :
         res = resFile.read()
         resFile.close()
 
-        os.system("rm consistencyRes.log")
+        os.system("rm -rf consistencyRes.log")
 
         if res.find("# No proof found!") != -1 or res.find("# Failure: Resource limit exceeded") != -1:
             print "Eprover: No consistency proof found."
