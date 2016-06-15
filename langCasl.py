@@ -8,7 +8,6 @@ import re
 from settings import *
 
 from auxFunctions import *
-import requests
 
 # from FOL import *
 
